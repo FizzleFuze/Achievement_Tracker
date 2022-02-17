@@ -56,6 +56,10 @@ end
 --show message about progress for achievement
 local function ShowAchievementProgress(Achievement)
 
+    if GetAchievementFlags(Achievement.id) then
+        return -- don't show ones which are already complete
+    end
+
     local Notification = {
         id = Achievement.id,
         Title = Achievement.Name .. " Progress",
@@ -163,7 +167,6 @@ end
 
 function OnMsg.PreventedCaveIn(_)
     --Willtheyhold
-    PreventedCaveIns = PreventedCaveIns + 1
     if PreventedCaveIns < 100 then
         AchievementObjects.Willtheyhold.ParameterValue = PreventedCaveIns
         ShowAchievementProgress(AchievementObjects.Willtheyhold)
@@ -191,7 +194,6 @@ end
 function OnMsg.TrainingComplete(building, _)
     --JapanTrainedSpecialists
     if UIColony.day <= 100 and building.training_type == "specialization" and GetMissionSponsor().id == "Japan" then
-        TotalTrainedSpecialists = TotalTrainedSpecialists + 1
         if TotalTrainedSpecialists <= AchievementPresets.JapanTrainedSpecialists.target then
             AchievementObjects.JapanTrainedSpecialists.ParameterValue = TotalTrainedSpecialists
             ShowAchievementProgress(AchievementObjects.JapanTrainedSpecialists)
@@ -202,7 +204,6 @@ end
 function OnMsg.FundingChanged(colony, amount)
     --BlueSunProducedFunding
     if GameTime() > 1 and GetMissionSponsor().id == "BlueSun" and UIColony.day <= 100 and 0 < amount then
-        FundingGenerated = FundingGenerated + amount
         if FundingGenerated <= AchievementPresets.BlueSunProducedFunding.target * 1000000 then
             AchievementObjects.BlueSunProducedFunding.ParameterValue = FundingGenerated
             ShowAchievementProgress(AchievementObjects.BlueSunProducedFunding)
@@ -389,7 +390,6 @@ function OnMsg.ConstructionComplete(bld)
         return
     end
     local city = bld.city
-    g_BuildingsBuilt = g_BuildingsBuilt + 1
     --Built1000Buildings
     if g_BuildingsBuilt <= AchievementPresets.Built1000Buildings.target then
         AchievementObjects.Built1000Buildings.ParameterValue = g_BuildingsBuilt
@@ -409,7 +409,6 @@ function OnMsg.ConstructionComplete(bld)
 end
 
 function OnMsg.ResourceExtracted(_, amount)
-    g_TotalExtractedResources = g_TotalExtractedResources + amount
     --RussiaExtractedAlot
     if GetMissionSponsor().id == "Roscosmos" and UIColony.day < 100 and g_TotalExtractedResources <= RussiaExtractedAlot_target then
         AchievementObjects.RussiaExtractedAlot.ParameterValue = g_TotalExtractedResources
