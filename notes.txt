@@ -1,3 +1,6 @@
 2do:
+    - if a player doesn't have a DLC?
+    - only show messages for achievements which are not complete
+    - format numbers for display
     - replace DataInstances.Achievement with Presets...
     - command center view of progress

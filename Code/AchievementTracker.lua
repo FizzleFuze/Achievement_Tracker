@@ -89,6 +89,11 @@ function OnMsg.RocketLanded(rocket)
             ShowAchievementProgress(AchievementObjects.AsteroidHopping)
         end
     end
+    --Landed50Rockets
+    if g_RocketsLandedCount <= AchievementPresets.Landed50Rockets.target then
+        AchievementObjects.Landed50Rockets.ParameterValue = g_RocketsLandedCount
+        ShowAchievementProgress(AchievementObjects.Landed50Rockets)
+    end
 end
 
 function OnMsg.TechResearched(_, research, first_time)
@@ -442,15 +447,6 @@ function OnMsg.ColonistBorn(colonist)
 end
 function OnMsg.ColonistArrived()
     DelayedCall(1000, CheckColonistCountAchievements)
-end
-
-function OnMsg.RocketLanded()
-    g_RocketsLandedCount = g_RocketsLandedCount + 1
-    --Landed50Rockets
-    if g_RocketsLandedCount <= AchievementPresets.Landed50Rockets.target then
-        AchievementObjects.Landed50Rockets.ParameterValue = g_RocketsLandedCount
-        ShowAchievementProgress(AchievementObjects.Landed50Rockets)
-    end
 end
 
 function OnMsg.ColonistCured(_, bld)
