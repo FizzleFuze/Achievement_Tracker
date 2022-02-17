@@ -408,7 +408,7 @@ function OnMsg.ConstructionComplete(bld)
     end
 end
 
-function OnMsg.ResourceExtracted(_, amount)
+function OnMsg.ResourceExtracted()
     --RussiaExtractedAlot
     if GetMissionSponsor().id == "Roscosmos" and UIColony.day < 100 and g_TotalExtractedResources <= RussiaExtractedAlot_target then
         AchievementObjects.RussiaExtractedAlot.ParameterValue = g_TotalExtractedResources
