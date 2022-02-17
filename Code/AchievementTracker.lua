@@ -1,5 +1,5 @@
 -- See license.md for copyright info
-FFL_Debugging = true
+--FFL_Debugging = true
 
 --wrapper logging function for this file
 local function Log(...)
