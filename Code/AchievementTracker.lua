@@ -11,7 +11,7 @@ local AchievementObjects = {}
 
 --initialize achievement objects
 local function Init()
-    if not UICity then
+    if not MainCity then
         Log("No city!")
         return
     end
@@ -22,13 +22,24 @@ local function Init()
     end
 
     if FFL_Debugging then
-        if UICity.labels.TrackedAchievements then
-            UICity.labels.TrackedAchievements = nil
+        if MainCity.labels.TrackedAchievements then
+            MainCity.labels.TrackedAchievements = nil
         end
     end
 
-    if not UICity.labels.TrackedAchievements then
+    if not MainCity.labels.TrackedAchievements then
         for _,Achievement in pairs(DataInstances.Achievement) do
+            --[[
+            local AchievementObj = PlaceObjIn("TrackedAchievement", MainCity.map_id, {
+                id = Achievement.id,
+                Name = Achievement.display_name,
+                Description = Achievement.description,
+                Image = Achievement.image,
+                ParameterName = Achievement.how_to,
+                ParameterTarget = Achievement.target,
+            })
+            --]]
+
             local AchievementObj = PlaceObj("TrackedAchievement")
             AchievementObj.id = Achievement.id
             AchievementObj.Name = Achievement.display_name
@@ -36,6 +47,7 @@ local function Init()
             AchievementObj.Image = Achievement.image
             AchievementObj.ParameterName = Achievement.how_to
             AchievementObj.ParameterTarget = Achievement.target
+
             AchievementObjects[AchievementObj.id] = AchievementObj
         end
     end
@@ -54,7 +66,7 @@ local function ShowAchievementProgress(Achievement)
             expiration = 45000,
             game_time = true
         },
-        Map = UICity.map_id
+        Map = MainCity.map_id
     }
     AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, nil, Notification.Options, Notification.Map)
 end
@@ -271,7 +283,7 @@ function OnMsg.TerraformParamChanged()
                 expiration = 10000,
                 game_time = true
             },
-            Map = UICity.map_id
+            Map = MainCity.map_id
         }
         AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, nil, Notification.Options, Notification.Map)
     end
@@ -462,24 +474,7 @@ function OnMsg.ColonistJoinsDome(_, dome)
     end
 end
 
--- doesn't seem to trigger?
-function OnMsg.AchievementProgress(...)
-    local Arg = ...
-    print("Achievement Args:")
-    for k, v in pairs(Arg) do
-        print(k, " = ", v)
-    end
-end
-
 --event handling
 OnMsg.ModsReloaded = Init
 OnMsg.CityStart = Init
 OnMsg.LoadGame = Init
-
---[[
-function OnMsg.ApplyModOptions(id)
-    if id == "FIZZLE9" then
-        Init()
-    end
-end
---]]

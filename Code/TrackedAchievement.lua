@@ -22,12 +22,12 @@ DefineClass.TrackedAchievement = {
 
 function TrackedAchievement:Init()
     if self.default_label then
-        UICity:AddToLabel(self.default_label, self)
+        MainCity:AddToLabel(self.default_label, self)
     end
 end
 
 function TrackedAchievement:Done()
     if self.default_label then
-        UICity:RemoveFromLabel(self.default_label, self)
+        MainCity:RemoveFromLabel(self.default_label, self)
     end
 end
