@@ -1,0 +1,2 @@
+2do:
+    - command center view of progress
