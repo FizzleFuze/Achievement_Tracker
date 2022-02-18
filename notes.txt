@@ -1,6 +1,5 @@
 2do:
-    - if a player doesn't have a DLC?
-    - only show messages for achievements which are not complete
-    - format numbers for display
-    - replace DataInstances.Achievement with Presets...
-    - command center view of progress
+    - add onlick to show how to get the achievement
+    - handle resource / funding in message output
+    - if a player doesn't have a DLC? (ties in to previous point)
+    - command center view of progress for all eligible achievements on this playthrough

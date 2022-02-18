@@ -16,8 +16,9 @@ DefineClass.TrackedAchievement = {
     },
     ParameterValue = 0,
     Image = nil,
-    default_label = "TrackedAchievements",
+    default_label = "TrackedAchievement",
     Documentation = "Achievement object for tracking.",
+    MessageThread = nil,
 }
 
 function TrackedAchievement:Init()
@@ -30,4 +31,40 @@ function TrackedAchievement:Done()
     if self.default_label then
         MainCity:RemoveFromLabel(self.default_label, self)
     end
+end
+
+--delayed show message
+function TrackedAchievement:ShowAchievementProgress()
+
+    if GetAchievementFlags(self.id) then
+        return -- don't show ones which are already complete
+    end
+
+    if not self.MessageThread then
+       self.MessageThread = CreateGameTimeThread( function()
+            Sleep(CurrentModOptions:GetProperty("SolDelay") * const.DayDuration)
+            Sleep(CurrentModOptions:GetProperty("HourDelay") * const.HourDuration)
+
+           local Notification = {
+               id = self.id,
+               Title = self.Name .. " Progress",
+               Message = InfobarObj.FmtRes(nil, self.ParameterValue) .. " / " .. InfobarObj.FmtRes(nil, self.ParameterTarget),
+               Icon = "UI/Achievements/" .. self.Image .. ".dds",
+               Callback = nil,
+               Options = {
+                   expiration = 45000,
+                   game_time = true
+               },
+               Map = MainCity.map_id
+           }
+           AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, nil, Notification.Options, Notification.Map)
+
+           self.MessageThread = nil
+        end )
+    end
+end
+
+function TrackedAchievement:UpdateValue(NewValue)
+    self.ParameterValue = NewValue
+    self:ShowAchievementProgress()
 end

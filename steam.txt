@@ -1,4 +1,4 @@
-[h1]Achievement Tracker[/h1]
+[b][i]Achievement Tracker[/b][/i]
 👍 Show a message informing you when you make progress toward a locked achievement
 
 If you're having any difficulties with the mod, or if you have suggestions for other casino and gambling ideas, or even other mods entirely, please contact me directly instead of reporting the mod.
