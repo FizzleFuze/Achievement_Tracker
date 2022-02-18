@@ -1,24 +1,21 @@
 -- See license.md for copyright info
-
---wrapper logging function for this file
+SharedModEnv["FFL_Debug"] = true
 local function Log(...)
     FFL_LogMessage(CurrentModDef.title, "TrackedAchievement", ...)
 end
 
 DefineClass.TrackedAchievement = {
     __parents = { "Object", },
-    properties = {
-        { id = "id", default = "Uninitialized"},
-        { id = "Name", help = "Achievement Name", editor = "text", default = "Uninitialized"},
-        { id = "Description", help = "Achievement Description", editor = "text", default = "Uninitialized"},
-        { id = "ParameterName", help = "Names of parameters which must be met.", editor = "text", default = "Uninitialized"},
-        { id = "ParameterTarget", help = "Values of parameters which much be met.", editor = "text", default = "Uninitialized"},
-    },
-    ParameterValue = 0,
+    id = "Uninitialized",
+    Name = "Uninitialized",
+    Description = "Uninitialized",
     Image = nil,
     default_label = "TrackedAchievement",
-    Documentation = "Achievement object for tracking.",
     MessageThread = nil,
+    Failed = false,
+    Target = 0,
+    Value = 0,
+    Type = "default",
 }
 
 function TrackedAchievement:Init()
@@ -34,37 +31,80 @@ function TrackedAchievement:Done()
 end
 
 --delayed show message
-function TrackedAchievement:ShowAchievementProgress()
+function TrackedAchievement:ShowMessage()
+
+    local SleepTime = { Sols = 0, Hours = 0 }
+    local Notification = {
+        id = self.id,
+        Title = self.Name,
+        Message = "", -- set after sleep to be up to date
+        Icon = "UI/Achievements/" .. self.Image .. ".dds",
+        Callback = nil,
+        Options = {
+            expiration = 45000,
+            game_time = true,
+            rollover_text = FFL_Translate(self.description),
+        },
+        Map = MainCity.map_id
+    }
+
+    local function ShowPopup()
+        local Popup = {
+            Title = FFL_Translate(self.Name),
+            Text = self.Description .. "\n\nCurrent Progress: " .. FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target),
+            Choices = { "OK" }
+        }
+        Popup.Text = FFL_Translate(Popup.Text)
+
+        WaitCustomPopupNotification(Popup.Title, Popup.Text, Popup.Choices)
+    end
+
+    local function ShowMsg()
+        Sleep(SleepTime.Sols * const.Scale.sols)
+        Sleep(SleepTime.Hours * const.Scale.hours)
+
+        if self.Value >= self.Target then  --complete
+            Notification.Title = Notification.Title .. " Completed!"
+            Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target).. "\nCongratulations on your achievement! :)"
+        elseif self.Failed then --fail
+            Notification.Title = Notification.Title .. " Failed!"
+            Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target).. "\nBetter luck next time :)"
+        elseif self.Value < self.Target then --progress
+            SleepTime.Sols = CurrentModOptions:GetProperty("SolDelay")
+            SleepTime.Hours = CurrentModOptions:GetProperty("HourDelay")
+            Notification.Title = Notification.Title .. " Progress"
+            Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target)
+        end
+
+        AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, ShowPopup, Notification.Options, Notification.Map)
+        self.MessageThread = nil
+    end
 
     if GetAchievementFlags(self.id) then
         return -- don't show ones which are already complete
     end
 
     if not self.MessageThread then
-       self.MessageThread = CreateGameTimeThread( function()
-            Sleep(CurrentModOptions:GetProperty("SolDelay") * const.DayDuration)
-            Sleep(CurrentModOptions:GetProperty("HourDelay") * const.HourDuration)
-
-           local Notification = {
-               id = self.id,
-               Title = self.Name .. " Progress",
-               Message = InfobarObj.FmtRes(nil, self.ParameterValue) .. " / " .. InfobarObj.FmtRes(nil, self.ParameterTarget),
-               Icon = "UI/Achievements/" .. self.Image .. ".dds",
-               Callback = nil,
-               Options = {
-                   expiration = 45000,
-                   game_time = true
-               },
-               Map = MainCity.map_id
-           }
-           AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, nil, Notification.Options, Notification.Map)
-
-           self.MessageThread = nil
-        end )
+        self.MessageThread = CreateGameTimeThread(ShowMsg)
     end
 end
 
 function TrackedAchievement:UpdateValue(NewValue)
-    self.ParameterValue = NewValue
-    self:ShowAchievementProgress()
+    if self.Type == "Resource" then
+        NewValue = NewValue / 100
+    end
+
+    if CurrentModOptions:GetProperty("ShowOnScreen") == self.Name then
+        UpdateOSD()
+    end
+
+    if NewValue ~= self.Value then
+        self.Value = NewValue
+        self:ShowMessage()
+    end
+end
+
+function TrackedAchievement:SetFailed()
+    self.Failed = true
+    self:ShowMessage()
 end

@@ -1,16 +1,17 @@
 -- See license.md for copyright info
---FFL_Debugging = true
+SharedModEnv["FFL_Debug"] = true
 
---wrapper logging function for this file
 local function Log(...)
     FFL_LogMessage(CurrentModDef.title, "AchievementTracker", ...)
 end
 
 --locals
 local AchievementObjects = {}
+local InitDone = false
 
 --initialize achievement objects
 local function Init()
+    InitDone = false
     if not MainCity then
         Log("No city!")
         return
@@ -21,7 +22,7 @@ local function Init()
         return
     end
 
-    if FFL_Debugging then
+    if SharedModEnv["FFL_Debug"] then
         if MainCity.labels.TrackedAchievements then
             MainCity.labels.TrackedAchievements = nil
         end
@@ -29,45 +30,56 @@ local function Init()
 
     if not MainCity.labels.TrackedAchievements then
         for _,Achievement in pairs(AchievementPresets) do
-            --[[
-            local AchievementObj = PlaceObjIn("TrackedAchievement", MainCity.map_id, {
-                id = Achievement.id,
-                Name = Achievement.display_name,
-                Description = Achievement.description,
-                Image = Achievement.image,
-                ParameterName = Achievement.how_to,
-                ParameterTarget = Achievement.target,
-            })
-            --]]
+
+            if Achievement.save_in then
+                if (Achievement.save_in == "picard" and g_AvailableDlc.picard) or
+                        (Achievement.save_in == "armstrong" and g_AvailableDlc.armstrong) or
+                        (Achievement.save_in == "gagarin" and g_AvailableDlc.gagarin) then
+                end
+            end
 
             local AchievementObj = PlaceObj("TrackedAchievement")
-            AchievementObj.id = Achievement.id
-            AchievementObj.Name = Achievement.display_name
-            AchievementObj.Description = Achievement.description
+            AchievementObj.id = _InternalTranslate(Achievement.id)
+            AchievementObj.Name = _InternalTranslate(Achievement.display_name)
+            AchievementObj.Description = _InternalTranslate(Achievement.how_to)
             AchievementObj.Image = Achievement.image
-            AchievementObj.ParameterName = Achievement.how_to
-            AchievementObj.ParameterTarget = Achievement.target
+            AchievementObj.Target = Achievement.target
 
             AchievementObjects[AchievementObj.id] = AchievementObj
 
-            CreateGameTimeThread( function()
-                Sleep(500) -- wait for PlaceObj to finish
+            CreateGameTimeThread(function()
+                Sleep(1000) -- wait for PlaceObj to finish
                 --boo for hardcoding
-                AchievementObjects.AsteroidHopping.ParameterTarget = 10
-                AchievementObjects.USAResearchedEngineering.ParameterTarget = #Presets.TechPreset.Engineering
-                AchievementObjects.Multitasking.ParameterTarget = 3
-                AchievementObjects.SpaceDwarves.ParameterTarget = 200
-                AchievementObjects.Willtheyhold.ParameterTarget = 100
-                AchievementObjects.ScannedAllSectors.ParameterTarget = 100
-                AchievementObjects.DeepScannedAllSectors.ParameterTarget = 100
-                AchievementObjects.SpaceExplorer.ParameterTarget = #Presets.TechPreset.ReconAndExpansion
+                AchievementObjects.AsteroidHopping.Target = 10
+                AchievementObjects.USAResearchedEngineering.Target = #Presets.TechPreset.Engineering
+                AchievementObjects.Multitasking.Target = 3
+                AchievementObjects.SpaceDwarves.Target = 200
+                AchievementObjects.Willtheyhold.Target = 100
+                AchievementObjects.ScannedAllSectors.Target = 100
+                AchievementObjects.DeepScannedAllSectors.Target = 100
+                AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion -- = 0... data must not be initialized yet, updated later
+
+                --boo for using the wrong scale
+                AchievementObjects.IndiaConvertedWasteRock.Type = "Resource"
+                AchievementObjects.BrazilConvertedWasteRock.Type = "Resource"
+                AchievementObjects.RussiaExtractedAlot.Type = "Resource"
+                AchievementObjects.BlueSunProducedFunding.Type = "Resource"
+                AchievementObjects.BlueSunExportedAlot.Type = "Resource"
             end)
         end
     end
+    InitDone = true
+    CreateOSD()
 end
+
 
 --achievement triggers below
 function OnMsg.MarkPreciousMetalsExport(city, _)
+
+    if not InitDone then
+        return
+    end
+
     --BlueSunExportedAlot
     if GetMissionSponsor().id == "BlueSun" and UIColony.day < 100 then
         AchievementObjects.BlueSunExportedAlot:UpdateValue(city.total_export)
@@ -75,6 +87,11 @@ function OnMsg.MarkPreciousMetalsExport(city, _)
 end
 
 function OnMsg.RocketLanded(rocket)
+
+    if not InitDone then
+        return
+    end
+
     --AsteroidHopping
     if rocket:IsKindOf("LanderRocketBase") then
         local has_landed_on_asteroid = ObjectIsInEnvironment(rocket, "Asteroid")
@@ -89,29 +106,39 @@ function OnMsg.RocketLanded(rocket)
 end
 
 function OnMsg.TechResearched(_, research, first_time)
-    if not first_time then
+    if not first_time or not InitDone then
         return
     end
     --SpaceExplorer
+    if AchievementObjects.SpaceExplorer.Target == 0 then
+        AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion
+    end
     for field_id, field in pairs(TechFields) do
         if field:HasMember("save_in") and field.save_in == "picard" then
             local researched, total = research:TechCount(field_id, "researched")
             if researched < total then
-                AchievementObjects.SpaceExplorer:UpdateValue(researched)
-                return
+                if AchievementObjects.SpaceExplorer.Target > 0 then
+                    AchievementObjects.SpaceExplorer:UpdateValue(researched)
+                    return
+                end
             end
         end
     end
     --USAResearchedEngineering
     if sponsor.id == "NASA" and UIColony.day < 100 and research:TechCount("Engineering", "researched") <= #research.tech_field.Engineering then
         AchievementObjects.USAResearchedEngineering:UpdateValue(#research.tech_field.Engineering)
-    --EuropeResearchedBreakthroughs
+        --EuropeResearchedBreakthroughs
     elseif sponsor.id == "ESA" and UIColony.day < 100 and research:TechCount("Breakthroughs", "researched") <= AchievementPresets.EuropeResearchedBreakthroughs.target then
         AchievementObjects.EuropeResearchedBreakthroughs:UpdateValue(research:TechCount("Breakthroughs", "researched"))
     end
 end
 
 function OnMsg.AsteroidRocketLanded(rocket)
+
+    if not InitDone then
+        return
+    end
+
     --Multitasking
     if not rocket:IsKindOf("LanderRocketBase") then
         return
@@ -135,7 +162,38 @@ function OnMsg.AsteroidRocketLanded(rocket)
     end
 end
 
-function OnMsg.NewDay(_)
+function OnMsg.NewDay(Day)
+    if not InitDone then
+        return
+    end
+
+    if Day == 100 then
+        if GetMissionSponsor().id == "BlueSun" then
+            AchievementObjects.BlueSunExportedAlot:SetFailed()
+            AchievementObjects.BlueSunProducedFunding:SetFailed()
+        elseif GetMissionSponsor().id == "CNSA" then
+            AchievementObjects.ChinaTaiChiGardens:SetFailed()
+            AchievementObjects.ChinaReachedHighPopulation:SetFailed()
+        elseif GetMissionSponsor().id == "Japan" then
+            AchievementObjects.JapanTrainedSpecialists:SetFailed()
+        elseif GetMissionSponsor().id == "ESA" then
+            AchievementObjects.EuropeResearchedBreakthroughs:SetFailed()
+            AchievementObjects.EuropeResearchedAlot:SetFailed()
+        elseif GetMissionSponsor().id == "ISRO" then
+            AchievementObjects.IndiaConvertedWasteRock:SetFailed()
+            AchievementObjects.IndiaBuiltDomes:SetFailed()
+        elseif GetMissionSponsor().id == "Roscosmos" then
+            AchievementObjects.RussiaExtractedAlot:SetFailed()
+        elseif GetMissionSponsor().id == "NewArk" then
+            AchievementObjects.NewArkChurchHappyColonists:SetFailed()
+            AchievementObjects.NewArcChurchMartianborns:SetFailed()
+        elseif GetMissionSponsor().id == "NASA" then
+            AchievementObjects.USAResearchedEngineering:SetFailed()
+        elseif GetMissionSponsor().id == "Brazil" then
+            AchievementObjects.BrazilConvertedWasteRock:SetFailed()
+        end
+    end
+
     --SpaceDwarves
     local underground_city = Cities[UIColony.underground_map_id]
     if not underground_city then
@@ -149,6 +207,10 @@ function OnMsg.NewDay(_)
 end
 
 function OnMsg.PreventedCaveIn(_)
+    if not InitDone then
+        return
+    end
+
     --Willtheyhold
     if PreventedCaveIns < 100 then
         AchievementObjects.Willtheyhold:UpdateValue(PreventedCaveIns)
@@ -156,6 +218,10 @@ function OnMsg.PreventedCaveIn(_)
 end
 
 function OnMsg.BuildingInit(bld)
+    if not InitDone then
+        return
+    end
+
     --ChinaTaiChiGardens
     if UIColony.day <= 100 then
         local sponsor_id = GetMissionSponsor().id
@@ -173,6 +239,10 @@ function OnMsg.BuildingInit(bld)
 end
 
 function OnMsg.TrainingComplete(building, _)
+    if not InitDone then
+        return
+    end
+
     --JapanTrainedSpecialists
     if UIColony.day <= 100 and building.training_type == "specialization" and GetMissionSponsor().id == "Japan" then
         if TotalTrainedSpecialists <= AchievementPresets.JapanTrainedSpecialists.target then
@@ -182,6 +252,10 @@ function OnMsg.TrainingComplete(building, _)
 end
 
 function OnMsg.FundingChanged(colony, amount)
+    if not InitDone then
+        return
+    end
+
     --BlueSunProducedFunding
     if GameTime() > 1 and GetMissionSponsor().id == "BlueSun" and UIColony.day <= 100 and 0 < amount then
         if FundingGenerated <= AchievementPresets.BlueSunProducedFunding.target * 1000000 then
@@ -195,6 +269,10 @@ function OnMsg.FundingChanged(colony, amount)
 end
 
 function OnMsg.NewHour(_)
+    if not InitDone then
+        return
+    end
+
     --EuropeResearchedAlot
     local sponsor = GetMissionSponsor().id
     if sponsor == "ESA" and UIColony.day <= 100 and UIColony:GetEstimatedRP() <= AchievementPresets.EuropeResearchedAlot.target then
@@ -220,6 +298,10 @@ function OnMsg.NewHour(_)
 end
 
 function OnMsg.WasteRockConversion(amount, producers)
+    if not InitDone then
+        return
+    end
+
     local sponsor = GetMissionSponsor().id
     WasteRockConverted = WasteRockConverted + amount
     if producers.PreciousMetals then
@@ -228,7 +310,7 @@ function OnMsg.WasteRockConversion(amount, producers)
     --IndiaConvertedWasteRock
     if sponsor == "ISRO" and UIColony.day <= 100 and WasteRockConverted / const.ResourceScale <= AchievementPresets.IndiaConvertedWasteRock.target then
         AchievementObjects.IndiaConvertedWasteRock:UpdateValue(WasteRockConverted / const.ResourceScale)
-    --BrazilConvertedWasteRock
+        --BrazilConvertedWasteRock
     elseif sponsor == "Brazil" and UIColony.day <= 100 and WasteRockConvertedToRareMetals / const.ResourceScale <= AchievementPresets.BrazilConvertedWasteRock.target then
         AchievementObjects.BrazilConvertedWasteRock:UpdateValue(WasteRockConverted / const.ResourceScale)
     end
@@ -250,6 +332,10 @@ local AllTerraformParamsMaxed = function()
 end
 --2do: update/fix this
 function OnMsg.TerraformParamChanged()
+    if not InitDone then
+        return
+    end
+
     if not AllTerraformParamsMaxed() then
         local Notification = {
             id = "MaxedAllTPs",
@@ -311,6 +397,10 @@ function OnMsg.ColonistAddTrait()
 end
 
 function OnMsg.SectorScanned()
+    if not InitDone then
+        return
+    end
+
     if GetAchievementFlags("ScannedAllSectors") and GetAchievementFlags("DeepScannedAllSectors") then
         return
     end
@@ -354,6 +444,10 @@ local CountNonConstructionSitesInLabel = function(city, label)
     return count
 end
 function OnMsg.ConstructionComplete(bld)
+    if not InitDone then
+        return
+    end
+
     if IsKindOf(bld, "RocketLandingSite") then
         return
     end
@@ -376,6 +470,10 @@ function OnMsg.ConstructionComplete(bld)
 end
 
 function OnMsg.ResourceExtracted()
+    if not InitDone then
+        return
+    end
+
     --RussiaExtractedAl1ot
     if GetMissionSponsor().id == "Roscosmos" and UIColony.day < 100 and g_TotalExtractedResources <= RussiaExtractedAlot_target then
         AchievementObjects.RussiaExtractedAlot:UpdateValue(g_TotalExtractedResources)
@@ -398,6 +496,10 @@ local CheckColonistCountAchievements = function()
     end
 end
 function OnMsg.ColonistBorn(colonist)
+    if not InitDone then
+        return
+    end
+
     --NewArcChurchMartianborns
     if colonist.traits.Child and colonist.age == 0 then
         if GetMissionSponsor().id == "NewArk" and UIColony.day < 100 and g_TotalChildrenBornWithMating <= AchievementPresets.NewArcChurchMartianborns.target then
@@ -411,6 +513,10 @@ function OnMsg.ColonistArrived()
 end
 
 function OnMsg.ColonistCured(_, bld)
+    if not InitDone then
+        return
+    end
+
     --CuredColonists
     if bld.total_cured <= AchievementPresets.CuredColonists.target then
         AchievementObjects.CuredColonists:UpdateValue(bld.total_cured)
@@ -418,6 +524,10 @@ function OnMsg.ColonistCured(_, bld)
 end
 
 function OnMsg.ColonistJoinsDome(_, dome)
+    if not InitDone then
+        return
+    end
+
     --Had100ColonistsInDome
     if #(dome.labels.Colonist or empty_table) <= AchievementPresets.Had100ColonistsInDome.target then
         AchievementObjects.Had100ColonistsInDome:UpdateValue(#(dome.labels.Colonist or empty_table))
@@ -430,8 +540,13 @@ end
 
 --event handling
 function OnMsg.ModsReloaded()
-    MainCity.labels.TrackedAchievement = nil
-    Init()
+    if MainCity then
+        MainCity.labels.TrackedAchievement = nil
+        Init()
+    end
+end
+function OnMsg.ApplyModOptions()
+    CreateOSD()
 end
 OnMsg.CityStart = Init
 OnMsg.LoadGame = Init
