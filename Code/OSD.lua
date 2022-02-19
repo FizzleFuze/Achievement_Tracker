@@ -6,77 +6,73 @@ end
 local UpdateThread
 
 function CreateOSD()
-    local InfoBar = Dialogs.Infobar
-    local InfoBarDialog = OpenDialog("Infobar")
+    local Parent = Dialogs.InGameInterface
+    local ParentDialog = OpenDialog("InGameInterface")
 
-    if InfoBar.FFAT_PrimaryAchievement then
-        InfoBar.FFAT_PrimaryAchievement:Open()
+    if Parent.FFAT_PA_Title then
+        Parent.FFAT_PrimaryAchievement:Open()
         UpdateOSD()
     else
         local OSD = XWindow:new({
             Id = "FFAT_PrimaryAchievement",
-            Margins = box(0, 100, 8, 0),
-            Valign = "top",
-            Dock = "right",
-        }, InfoBarDialog)
+            Margins = box(0, 100, 0, 0), --below InfoBar
+            HAlign = "center",
+        }, ParentDialog)
 
         XText:new({
-            Id = "FFAT_PrimaryAchievementText",
+            Id = "FFAT_PA_Title",
+            TextStyle = "AchievementTitle",
+            Dock = "top",
+        }, OSD)
+        XText:new({
+            Id = "FFAT_PA_Text",
+            Margins = box(0, OSD[1].measure_height, 0, 0), --below title
             RolloverTemplate = "Rollover",
             RolloverTitle = FFL_Translate("Primary Achievement"),
             RolloverText = FFL_Translate("Progress towards primary achievement"),
-            TextStyle = "MessageText",
+            TextStyle = "AchievementDescr",
             Background = 0,
+            Dock = "top",
         }, OSD)
 
-        OSD:SetParent(InfoBarDialog)
+        OSD:SetParent(ParentDialog)
     end
 
-    if InfoBar.FFAT_PrimaryAchievement then
+    if Parent.FFAT_PrimaryAchievement then
         UpdateOSD()
     end
 end
 
 function UpdateOSD()
-
-    local Text
-    local OSD
+    local Title, Text, OSD
+    local Parent = Dialogs.InGameInterface
 
     local function UpdateText()
-        OSD[1]:SetText(FFL_Translate(Text))
-        Sleep(1000) -- don't get too spammy
-        UpdateThread = nil
-    end
-
-    local Primary = CurrentModOptions:GetProperty("ShowOnScreen")
-    local Achievement
-
-    for _, A in pairs(MainCity.labels.TrackedAchievement) do
-        if A.Name == Primary then
-            Achievement = A
-            break
+        for _, A in pairs(MainCity.labels.TrackedAchievement) do
+            if A.Name == CurrentModOptions:GetProperty("ShowOnScreen") then
+                Title = A.Name
+                Text = A.Description .. "\nCurrent Progress: " .. FFL_FormatNumber(A.Value) .. " / " .. FFL_FormatNumber(A.Target)
+                OSD[1]:SetText(FFL_Translate(Title))
+                OSD[2]:SetText(FFL_Translate(Text))
+                UpdateThread = nil
+                return
+            end
         end
     end
 
-    if not Achievement or Achievement == "None" then
-        Log("No achievement tracked")
-        return
-    end
-
-    if not Dialogs.Infobar then
+    if not Parent then
         return -- not done init yet :(
     end
 
-    if not Dialogs.Infobar.FFAT_PrimaryAchievement then
+    if not Parent.FFAT_PrimaryAchievement then
         CreateOSD()
-        if not Dialogs.Infobar.FFAT_PrimaryAchievement then
+        if not Parent.FFAT_PrimaryAchievement then
             Log("ERROR", "Can't update non-existing OSD!")
             return
         end
     end
 
-    OSD = Dialogs.Infobar.FFAT_PrimaryAchievement
-    Text = Achievement.Name .. "\n" .. Achievement.Description .. "\n\nCurrent Progress:\n" .. FFL_FormatNumber(Achievement.Value) .. " / " .. FFL_FormatNumber(Achievement.Target)
+    OSD = Parent.FFAT_PrimaryAchievement
     if not UpdateThread then
         UpdateThread = CreateGameTimeThread(UpdateText)
     end
@@ -85,10 +81,11 @@ end
 -- this causes the game to get stuck on an infinite load screen with no errors logged to file
 --[[
 local FF_OpenDialog = OpenDialog
-function OpenDialog(DialogString, ...)
-    local Dialog = FF_OpenDialog(DialogString, ...)
-    if DialogString == "Infobar" then
+function OpenDialog(ID, ...)
+    local Dialog = FF_OpenDialog(ID, ...)
+    if ID == "InGameInterface" then
         CreateRealTimeThread(CreateOSD)
     end
+    return Dialog
 end
 --]]

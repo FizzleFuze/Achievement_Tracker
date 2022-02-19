@@ -60,9 +60,6 @@ function TrackedAchievement:ShowMessage()
     end
 
     local function ShowMsg()
-        Sleep(SleepTime.Sols * const.Scale.sols)
-        Sleep(SleepTime.Hours * const.Scale.hours)
-
         if self.Value >= self.Target then  --complete
             Notification.Title = Notification.Title .. " Completed!"
             Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target).. "\nCongratulations on your achievement! :)"
@@ -77,6 +74,8 @@ function TrackedAchievement:ShowMessage()
         end
 
         AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, ShowPopup, Notification.Options, Notification.Map)
+        Sleep(SleepTime.Sols * const.Scale.sols)
+        Sleep(SleepTime.Hours * const.Scale.hours)
         self.MessageThread = nil
     end
 

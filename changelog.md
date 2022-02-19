@@ -1,3 +1,7 @@
+Version 1.6
+- Fixed timer for messages
+- Improved primary achievement display
+
 Version 1.5
 - Show "proper" names in mod option for Primary Achievement
 - Added display showing primary achievement progress on the top right of the screen

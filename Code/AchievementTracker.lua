@@ -1,5 +1,5 @@
 -- See license.md for copyright info
-SharedModEnv["FFL_Debug"] = true
+SharedModEnv["FFL_Debug"] = false
 
 local function Log(...)
     FFL_LogMessage(CurrentModDef.title, "AchievementTracker", ...)
@@ -65,6 +65,8 @@ local function Init()
                 AchievementObjects.RussiaExtractedAlot.Type = "Resource"
                 AchievementObjects.BlueSunProducedFunding.Type = "Resource"
                 AchievementObjects.BlueSunExportedAlot.Type = "Resource"
+
+                CreateOSD() -- for Primary Achievement
             end)
         end
     end
