@@ -3,89 +3,173 @@ local function Log(...)
     FFL_LogMessage(CurrentModDef.title, "OSD", ...)
 end
 
+--locals
 local UpdateThread
 
+function CreateTextStyles()
+    if not TextStyles then
+        Log("ERROR", "No text styles!")
+        return false
+    end
+
+    if not TextStyles.FF_AT_PA_Title then
+        PlaceObj("TextStyle", {
+            DisabledRolloverTextColor = -10197916,
+            DisabledTextColor = -10197916,
+            RolloverTextColor = -727947,
+            TextColor = -727947,
+            TextFont = FFL_Translate("LibelSuitRg, 18, aa"),
+            group = "Game",
+            id = "FF_AT_PA_Title",
+            save_in = "common"
+        })
+    end
+
+    if not TextStyles.FF_AT_PA_Description then
+        PlaceObj("TextStyle", {
+            DisabledRolloverTextColor = -7566196,
+            DisabledTextColor = -7566196,
+            RolloverTextColor = -1,
+            TextColor = -1,
+            TextFont = FFL_Translate("LibelSuitRg, 16, aa"),
+            group = "Game",
+            id = "FF_AT_PA_Description",
+            save_in = "common"
+        })
+    end
+
+    if not TextStyles.FF_AT_PA_Progress then
+        PlaceObj("TextStyle", {
+            DisabledRolloverTextColor = -7566196,
+            DisabledTextColor = -7566196,
+            RolloverTextColor = -1,
+            TextColor = -1, --2do: find a better colour
+            TextFont = FFL_Translate("LibelSuitRg, 18, aa"),
+            group = "Game",
+            id = "FF_AT_PA_Progress",
+            save_in = "common"
+        })
+    end
+    return true
+end
+
 function CreateOSD()
+    local ShowMAWindow = SharedModEnv["FF_AT_ShowMainAchievementWindow"]
+
+    local function OnClick(...)
+        --2do: change achieve
+    end
+
+    local function OnDoubleClick(...)
+        ShowMAWindow = false
+        Dialogs.InGameInterface.FF_AT_PrimaryAchievement:Close()
+    end
+
     local Parent = Dialogs.InGameInterface
-    local ParentDialog = OpenDialog("InGameInterface")
-
-    if Parent.FFAT_PA_Title then
-        Parent.FFAT_PrimaryAchievement:Open()
-        UpdateOSD()
-    else
-        local OSD = XWindow:new({
-            Id = "FFAT_PrimaryAchievement",
-            Margins = box(0, 100, 0, 0), --below InfoBar
-            HAlign = "center",
-        }, ParentDialog)
-
-        XText:new({
-            Id = "FFAT_PA_Title",
-            TextStyle = "AchievementTitle",
-            Dock = "top",
-        }, OSD)
-        XText:new({
-            Id = "FFAT_PA_Text",
-            Margins = box(0, OSD[1].measure_height, 0, 0), --below title
-            RolloverTemplate = "Rollover",
-            RolloverTitle = FFL_Translate("Primary Achievement"),
-            RolloverText = FFL_Translate("Progress towards primary achievement"),
-            TextStyle = "AchievementDescr",
-            Background = 0,
-            Dock = "top",
-        }, OSD)
-
-        OSD:SetParent(ParentDialog)
+    if not Parent then
+        Log("ERROR", "No InGameInterface!")
+        return
     end
 
-    if Parent.FFAT_PrimaryAchievement then
-        UpdateOSD()
+    if not CreateTextStyles() then
+        Log("ERROR", "Failed to create Text Styles!")
+        return
     end
+
+    if Parent.FFAT_PrimaryAchievement then --backwards compatibility
+        Parent.FFAT_PrimaryAchievement:DeleteChildren()
+        Parent.FFAT_PrimaryAchievement:delete()
+    end
+
+    if Parent.FF_AT_PrimaryAchievement then
+        Parent.FF_AT_PrimaryAchievement:DeleteChildren()
+        Parent.FF_AT_PrimaryAchievement:delete()
+    end
+
+    if not ShowMAWindow then
+        return
+    end
+
+    local OSD = XWindow:new({
+        Background = 1677750783,
+        BorderColor = -16187200,
+        BorderWidth = 2,
+        ChildrenHandleMouse = false,
+        Dock = "box",
+        FoldWhenHidden = true, --how to hide?
+        HAlign = "center",
+        HandleKeyboard = false,
+        HandleMouse = true,
+        Id = "FF_AT_PrimaryAchievement",
+        IdNode = true,
+        Margins = box(0, 85, 0, 0), --below InfoBar
+        OnMouseButtonDoubleClick = OnDoubleClick,
+        OnMouseButtonDown = OnClick,
+        RolloverHint = FFL_Translate("Keep up the good work! =)"),
+        RolloverTemplate = "Rollover",
+        RolloverText = FFL_Translate("<image UI/Infopanel/left_click.tga 1400>*2 Close"),
+        RolloverTitle = FFL_Translate("Primary Achievement"),
+        transparency = 50,
+        VAlign = "top",
+    }, Parent)
+
+    XText:new({
+        Dock = "top",
+        HandleKeyboard = "false",
+        Id = "FF_AT_PA_Title",
+        TextStyle = "FF_AT_PA_Title",
+        TextHAlign = "center",
+    }, OSD)
+
+    XText:new({
+        Dock = "top",
+        HandleKeyboard = "false",
+        Id = "FF_AT_PA_Description",
+        TextStyle = "FF_AT_PA_Description",
+    }, OSD)
+
+    XText:new({
+        Dock = "top",
+        HandleKeyboard = "false",
+        Id = "FF_AT_PA_Progress",
+        TextStyle = "FF_AT_PA_Progress",
+    }, OSD)
+
+    OSD:SetParent(Parent)
+    UpdateOSD()
 end
 
 function UpdateOSD()
-    local Title, Text, OSD
-    local Parent = Dialogs.InGameInterface
 
     local function UpdateText()
+        local Title, Description, Progress
+
         for _, A in pairs(MainCity.labels.TrackedAchievement) do
             if A.Name == CurrentModOptions:GetProperty("ShowOnScreen") then
+
+                local OSD = Dialogs.InGameInterface.FF_AT_PrimaryAchievement
+                if not OSD then
+                    Log("No OSD")
+                    return
+                end
+
                 Title = A.Name
-                Text = A.Description .. "\nCurrent Progress: " .. FFL_FormatNumber(A.Value) .. " / " .. FFL_FormatNumber(A.Target)
-                OSD[1]:SetText(FFL_Translate(Title))
-                OSD[2]:SetText(FFL_Translate(Text))
+                Description = A.Description
+                Progress = "Current Progress: " .. FFL_FormatNumber(A.Value) .. " / " .. FFL_FormatNumber(A.Target)
+
+                if not OSD.FF_AT_PA_Title or not OSD.FF_AT_PA_Description or not OSD.FF_AT_PA_Progress then
+                    Log("ERROR", "Primary Achievement children don't exist!")
+                    return
+                end
+                OSD.FF_AT_PA_Title:SetText(FFL_Translate(Title))
+                OSD.FF_AT_PA_Description:SetText(FFL_Translate(Description))
+                OSD.FF_AT_PA_Progress:SetText(FFL_Translate(Progress))
                 UpdateThread = nil
-                return
             end
         end
     end
 
-    if not Parent then
-        return -- not done init yet :(
-    end
-
-    if not Parent.FFAT_PrimaryAchievement then
-        CreateOSD()
-        if not Parent.FFAT_PrimaryAchievement then
-            Log("ERROR", "Can't update non-existing OSD!")
-            return
-        end
-    end
-
-    OSD = Parent.FFAT_PrimaryAchievement
     if not UpdateThread then
-        UpdateThread = CreateGameTimeThread(UpdateText)
+            UpdateThread = CreateGameTimeThread(UpdateText)
     end
 end
-
--- this causes the game to get stuck on an infinite load screen with no errors logged to file
---[[
-local FF_OpenDialog = OpenDialog
-function OpenDialog(ID, ...)
-    local Dialog = FF_OpenDialog(ID, ...)
-    if ID == "InGameInterface" then
-        CreateRealTimeThread(CreateOSD)
-    end
-    return Dialog
-end
---]]

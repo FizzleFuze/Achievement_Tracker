@@ -5,13 +5,31 @@ local function Log(...)
     FFL_LogMessage(CurrentModDef.title, "AchievementTracker", ...)
 end
 
+--shared
+SharedModEnv["FF_AT_ShowMainAchievementWindow"] = true
+
 --locals
 local AchievementObjects = {}
 local InitDone = false
 
+-- hook opening dialogs
+local FF_OpenDialog = OpenDialog
+function OpenDialog(DialogPath, ...)
+    Log("Opening dialog ", DialogPath)
+    local Dialog = FF_OpenDialog(DialogPath, ...)
+    if DialogPath == "InGameInterface" then
+        CreateOSD()
+  --  elseif DialogPath == "ColonyControlCenter" then
+--        CreateCCC()
+    end
+    return Dialog
+end
+
 --initialize achievement objects
 local function Init()
     InitDone = false
+    SharedModEnv["FF_AT_ShowOnScreen"] = CurrentModOptions:GetProperty("ShowOnScreen")
+
     if not MainCity then
         Log("No city!")
         return
@@ -22,56 +40,49 @@ local function Init()
         return
     end
 
-    if SharedModEnv["FFL_Debug"] then
-        if MainCity.labels.TrackedAchievements then
-            MainCity.labels.TrackedAchievements = nil
-        end
+    if MainCity.labels.TrackedAchievements then
+        MainCity.labels.TrackedAchievements = nil
     end
 
-    if not MainCity.labels.TrackedAchievements then
-        for _,Achievement in pairs(AchievementPresets) do
+    for _,Achievement in pairs(AchievementPresets) do
 
-            if Achievement.save_in then
-                if (Achievement.save_in == "picard" and g_AvailableDlc.picard) or
-                        (Achievement.save_in == "armstrong" and g_AvailableDlc.armstrong) or
-                        (Achievement.save_in == "gagarin" and g_AvailableDlc.gagarin) then
-                end
+        if Achievement.save_in then
+            if (Achievement.save_in == "picard" and g_AvailableDlc.picard) or
+                    (Achievement.save_in == "armstrong" and g_AvailableDlc.armstrong) or
+                    (Achievement.save_in == "gagarin" and g_AvailableDlc.gagarin) then
             end
-
-            local AchievementObj = PlaceObj("TrackedAchievement")
-            AchievementObj.id = _InternalTranslate(Achievement.id)
-            AchievementObj.Name = _InternalTranslate(Achievement.display_name)
-            AchievementObj.Description = _InternalTranslate(Achievement.how_to)
-            AchievementObj.Image = Achievement.image
-            AchievementObj.Target = Achievement.target
-
-            AchievementObjects[AchievementObj.id] = AchievementObj
-
-            CreateGameTimeThread(function()
-                Sleep(1000) -- wait for PlaceObj to finish
-                --boo for hardcoding
-                AchievementObjects.AsteroidHopping.Target = 10
-                AchievementObjects.USAResearchedEngineering.Target = #Presets.TechPreset.Engineering
-                AchievementObjects.Multitasking.Target = 3
-                AchievementObjects.SpaceDwarves.Target = 200
-                AchievementObjects.Willtheyhold.Target = 100
-                AchievementObjects.ScannedAllSectors.Target = 100
-                AchievementObjects.DeepScannedAllSectors.Target = 100
-                AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion -- = 0... data must not be initialized yet, updated later
-
-                --boo for using the wrong scale
-                AchievementObjects.IndiaConvertedWasteRock.Type = "Resource"
-                AchievementObjects.BrazilConvertedWasteRock.Type = "Resource"
-                AchievementObjects.RussiaExtractedAlot.Type = "Resource"
-                AchievementObjects.BlueSunProducedFunding.Type = "Resource"
-                AchievementObjects.BlueSunExportedAlot.Type = "Resource"
-
-                CreateOSD() -- for Primary Achievement
-            end)
         end
+
+        local AchievementObj = PlaceObj("TrackedAchievement")
+        AchievementObj.id = _InternalTranslate(Achievement.id)
+        AchievementObj.Name = _InternalTranslate(Achievement.display_name)
+        AchievementObj.Description = _InternalTranslate(Achievement.how_to)
+        AchievementObj.Image = Achievement.image
+        AchievementObj.Target = Achievement.target
+
+        AchievementObjects[AchievementObj.id] = AchievementObj
+
+        CreateGameTimeThread(function()
+            Sleep(1000) -- wait for PlaceObj to finish
+            --boo for hardcoding
+            AchievementObjects.AsteroidHopping.Target = 10
+            AchievementObjects.USAResearchedEngineering.Target = #Presets.TechPreset.Engineering
+            AchievementObjects.Multitasking.Target = 3
+            AchievementObjects.SpaceDwarves.Target = 200
+            AchievementObjects.Willtheyhold.Target = 100
+            AchievementObjects.ScannedAllSectors.Target = 100
+            AchievementObjects.DeepScannedAllSectors.Target = 100
+            AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion -- = 0... data must not be initialized yet, updated later
+
+            --boo for using the wrong scale
+            AchievementObjects.IndiaConvertedWasteRock.Type = "Resource"
+            AchievementObjects.BrazilConvertedWasteRock.Type = "Resource"
+            AchievementObjects.RussiaExtractedAlot.Type = "Resource"
+            AchievementObjects.BlueSunProducedFunding.Type = "Resource"
+            AchievementObjects.BlueSunExportedAlot.Type = "Resource"
+        end)
     end
     InitDone = true
-    CreateOSD()
 end
 
 
@@ -357,6 +368,10 @@ function OnMsg.TerraformParamChanged()
 end
 
 local CheckTraitsAchievements = function()
+    if not InitDone then
+        return
+    end
+
     if GetAchievementFlags("ColonistWithRareTraits") and GetAchievementFlags("HadColonistWith5Perks") and GetAchievementFlags("HadVegans") then
         return
     end
@@ -548,6 +563,7 @@ function OnMsg.ModsReloaded()
     end
 end
 function OnMsg.ApplyModOptions()
+    SharedModEnv["FF_AT_ShowMainAchievementWindow"] = CurrentModOptions:GetProperty("ShowMainAchievementWindow")
     CreateOSD()
 end
 OnMsg.CityStart = Init

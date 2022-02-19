@@ -33,7 +33,15 @@ end
 --delayed show message
 function TrackedAchievement:ShowMessage()
 
+    local Speed = 1
     local SleepTime = { Sols = 0, Hours = 0 }
+
+    if GetEstimatedGameSpeedState() == "medium" then
+        Speed = 3
+    elseif GetEstimatedGameSpeedState() == "fast" then
+        Speed = 5
+    end
+
     local Notification = {
         id = self.id,
         Title = self.Name,
@@ -41,8 +49,9 @@ function TrackedAchievement:ShowMessage()
         Icon = "UI/Achievements/" .. self.Image .. ".dds",
         Callback = nil,
         Options = {
-            expiration = 45000,
-            game_time = true,
+
+            expiration = CurrentModOptions:GetProperty("MessageLength") * 1000 * Speed, -- real time changes with game speed >.>
+            game_time = false,
             rollover_text = FFL_Translate(self.description),
         },
         Map = MainCity.map_id
@@ -55,7 +64,6 @@ function TrackedAchievement:ShowMessage()
             Choices = { "OK" }
         }
         Popup.Text = FFL_Translate(Popup.Text)
-
         WaitCustomPopupNotification(Popup.Title, Popup.Text, Popup.Choices)
     end
 
@@ -90,7 +98,7 @@ end
 
 function TrackedAchievement:UpdateValue(NewValue)
     if self.Type == "Resource" then
-        NewValue = NewValue / 100
+        NewValue = NewValue / 1000
     end
 
     if CurrentModOptions:GetProperty("ShowOnScreen") == self.Name then

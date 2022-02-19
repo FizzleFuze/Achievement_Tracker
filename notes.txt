@@ -1,6 +1,12 @@
 2do:
- - fix the positioning of PA window
- - add beautification options for PA window
+ - beautification of PA OSD
+ - add screenshot of PA OSD
+ - Do you have B&B? I think it doesn't show up underground - it flashes off-screen. Haven't gone to asteroids yet with mod
+ - command center view of progress for all eligible achievements on this play-through
  - Added tooltip to messages showing further details on how to obtain the achievement
- - command center view of progress for all eligible achievements on this playthrough
  - add special thanks to ChoGGi, LoneSamurai, and Ella
+
+
+
+for k,v in pairs(X) do print(k, " = ", v) end
+table.find

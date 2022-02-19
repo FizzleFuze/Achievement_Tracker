@@ -14,11 +14,30 @@ PlaceObj('ModItemCode', {
 	'comment', "OSD for Primary Achievement",
 	'FileName', "Code/OSD.lua",
 }),
+PlaceObj('ModItemCode', {
+	'name', "Colony Control Center",
+	'comment', "CCC (Command Center) Additions for Achievements",
+	'FileName', "Code/CCC.lua",
+}),
 PlaceObj('ModItemOptionToggle', {
 	'name', "ShowFailures",
 	'DisplayName', "Show Failure Messages",
 	'Help', "Show a message when an achievement is failed",
 	'DefaultValue', true,
+}),
+PlaceObj('ModItemOptionToggle', {
+	'name', "ShowMainAchievementWindow",
+	'DisplayName', "Show Main Achievement Window",
+	'Help', "Show the main achievement window in the top center of the screen, just below the infopanel.",
+	'DefaultValue', true,
+}),
+PlaceObj('ModItemOptionNumber', {
+	'name', "MessageLength",
+	'DisplayName', "Message Length (Real-Time Seconds)",
+	'Help', "How long the message will show on the screen in seconds.",
+	'DefaultValue', 10,
+	'MinValue', 1,
+	'MaxValue', 60,
 }),
 PlaceObj('ModItemOptionNumber', {
 	'name', "HourDelay",
@@ -42,7 +61,6 @@ PlaceObj('ModItemOptionChoice', {
 	'Help', "The primary achievement is always tracked on the top right of the screen",
 	'DefaultValue', "Space Communism",
 	'ChoiceList', {
-		"None",
 		"Building a Better Future",
 		"Asteroid Hopping",
 		"You can't take the Sky from Me!",

@@ -1,15 +1,27 @@
+Version 1.7
+ - Added option for length of time message stays on screen
+ - Implemented work around for "real-time" changing based on game speed
+ - Fixed scale for resource based achievements again XD
+ - Forced re-initialization of objects so that they display correctly when loading a game saved with an older version
+ - Improved object initialization to avoid hangs
+ - Removed delay in updating PA text
+ - Improved PA window
+   - Added styling
+   - Added close on double click
+   - Added mod option to show PA or not
+
 Version 1.6
 - Fixed timer for messages
 - Improved primary achievement display
 
 Version 1.5
-- Show "proper" names in mod option for Primary Achievement
-- Added display showing primary achievement progress on the top right of the screen
-- Clicking on messages now shows further details on how to obtain the achievement
-- Added optional achievement failed message
-- Only tracks achievements for available DLCs
-- Added "Achievement Complete" message
-- Fixed the scale for the following achievements
+ - Show "proper" names in mod option for Primary Achievement
+ - Added display showing primary achievement progress on the top right of the screen
+ - Clicking on messages now shows further details on how to obtain the achievement
+ - Added optional achievement failed message
+ - Only tracks achievements for available DLCs
+ - Added "Achievement Complete" message
+ - Fixed the scale for the following achievements
    - IndiaConvertedWasteRock
    - BrazilConvertedWasteRock
    - RussiaExtractedAlot
