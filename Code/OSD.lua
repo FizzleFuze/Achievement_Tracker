@@ -12,8 +12,9 @@ function CreateTextStyles()
         return false
     end
 
-    if not TextStyles.FF_AT_PA_Title then
-        PlaceObj("TextStyle", {
+    local FF_AT_PA_Title, FF_AT_PA_Description, FF_AT_PA_Progress
+
+    FF_AT_PA_Title = PlaceObj("TextStyle", {
             DisabledRolloverTextColor = -10197916,
             DisabledTextColor = -10197916,
             RolloverTextColor = -727947,
@@ -23,10 +24,8 @@ function CreateTextStyles()
             id = "FF_AT_PA_Title",
             save_in = "common"
         })
-    end
 
-    if not TextStyles.FF_AT_PA_Description then
-        PlaceObj("TextStyle", {
+    FF_AT_PA_Description = PlaceObj("TextStyle", {
             DisabledRolloverTextColor = -7566196,
             DisabledTextColor = -7566196,
             RolloverTextColor = -1,
@@ -36,10 +35,8 @@ function CreateTextStyles()
             id = "FF_AT_PA_Description",
             save_in = "common"
         })
-    end
 
-    if not TextStyles.FF_AT_PA_Progress then
-        PlaceObj("TextStyle", {
+    FF_AT_PA_Progress = PlaceObj("TextStyle", {
             DisabledRolloverTextColor = -7566196,
             DisabledTextColor = -7566196,
             RolloverTextColor = -1,
@@ -49,6 +46,18 @@ function CreateTextStyles()
             id = "FF_AT_PA_Progress",
             save_in = "common"
         })
+
+    --replace with updates if needed
+    if TextStyles then
+        if not TextStyles.FF_AT_PA_Title or not TextStyles.FF_AT_PA_Title == FF_AT_PA_Title then
+            TextStyles.FF_AT_PA_Title = FF_AT_PA_Title
+        end
+        if not TextStyles.FF_AT_PA_Description or not TextStyles.FF_AT_PA_Description == FF_AT_PA_Description then
+            TextStyles.FF_AT_PA_Description = FF_AT_PA_Description
+        end
+        if not TextStyles.FF_AT_PA_Progress or not TextStyles.FF_AT_PA_Progress == FF_AT_PA_Progress then
+            TextStyles.FF_AT_PA_Progress = FF_AT_PA_Progress
+        end
     end
     return true
 end
@@ -92,8 +101,6 @@ function CreateOSD()
 
     local OSD = XWindow:new({
         Background = 1677750783,
-        BorderColor = -16187200,
-        BorderWidth = 2,
         ChildrenHandleMouse = false,
         Dock = "box",
         FoldWhenHidden = true, --how to hide?
@@ -105,6 +112,7 @@ function CreateOSD()
         Margins = box(0, 85, 0, 0), --below InfoBar
         OnMouseButtonDoubleClick = OnDoubleClick,
         OnMouseButtonDown = OnClick,
+        Padding = box(2,2,2,2),
         RolloverHint = FFL_Translate("Keep up the good work! =)"),
         RolloverTemplate = "Rollover",
         RolloverText = FFL_Translate("<image UI/Infopanel/left_click.tga 1400>*2 Close"),
@@ -113,27 +121,36 @@ function CreateOSD()
         VAlign = "top",
     }, Parent)
 
+    local Frame = XFrame:new({
+        HAlign = "center",
+        Id = "FF_AT_PA_Frame",
+        Image = "UI/Common/message_description_pad.dds",
+        Padding = box(3,3,3,3),
+        transparency = 33,
+        VAlign = "top",
+    }, OSD)
+
     XText:new({
         Dock = "top",
         HandleKeyboard = "false",
         Id = "FF_AT_PA_Title",
         TextStyle = "FF_AT_PA_Title",
         TextHAlign = "center",
-    }, OSD)
+    }, Frame)
 
     XText:new({
         Dock = "top",
         HandleKeyboard = "false",
         Id = "FF_AT_PA_Description",
         TextStyle = "FF_AT_PA_Description",
-    }, OSD)
+    }, Frame)
 
     XText:new({
         Dock = "top",
         HandleKeyboard = "false",
         Id = "FF_AT_PA_Progress",
         TextStyle = "FF_AT_PA_Progress",
-    }, OSD)
+    }, Frame)
 
     OSD:SetParent(Parent)
     UpdateOSD()
@@ -147,7 +164,7 @@ function UpdateOSD()
         for _, A in pairs(MainCity.labels.TrackedAchievement) do
             if A.Name == CurrentModOptions:GetProperty("ShowOnScreen") then
 
-                local OSD = Dialogs.InGameInterface.FF_AT_PrimaryAchievement
+                local OSD = Dialogs.InGameInterface.FF_AT_PrimaryAchievement.FF_AT_PA_Frame
                 if not OSD then
                     Log("No OSD")
                     return
