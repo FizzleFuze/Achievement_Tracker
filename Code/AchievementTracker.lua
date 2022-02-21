@@ -1,8 +1,8 @@
 -- See license.md for copyright info
-SharedModEnv["FFL_Debug"] = false
+FF.Lib.Debug = false
 
 local function Log(...)
-    FFL_LogMessage(CurrentModDef.title, "AchievementTracker", ...)
+    FF.Funcs.LogMessage(CurrentModDef.title, "AchievementTracker", ...)
 end
 
 --shared

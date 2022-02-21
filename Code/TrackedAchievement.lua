@@ -1,7 +1,7 @@
 -- See license.md for copyright info
-SharedModEnv["FFL_Debug"] = true
+
 local function Log(...)
-    FFL_LogMessage(CurrentModDef.title, "TrackedAchievement", ...)
+    FF.Funcs.LogMessage(CurrentModDef.title, "TrackedAchievement", ...)
 end
 
 DefineClass.TrackedAchievement = {
@@ -52,33 +52,33 @@ function TrackedAchievement:ShowMessage()
 
             expiration = CurrentModOptions:GetProperty("MessageLength") * 1000 * Speed, -- real time changes with game speed >.>
             game_time = false,
-            rollover_text = FFL_Translate(self.description),
+            rollover_text = FF.Funcs.Translate(self.description),
         },
         Map = MainCity.map_id
     }
 
     local function ShowPopup()
         local Popup = {
-            Title = FFL_Translate(self.Name),
-            Text = self.Description .. "\n\nCurrent Progress: " .. FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target),
+            Title = FF.Funcs.Translate(self.Name),
+            Text = self.Description .. "\n\nCurrent Progress: " .. FF.Funcs.FormatNumber(self.Value) .. " / " .. FF.Funcs.FormatNumber(self.Target),
             Choices = { "OK" }
         }
-        Popup.Text = FFL_Translate(Popup.Text)
+        Popup.Text = FF.Funcs.Translate(Popup.Text)
         WaitCustomPopupNotification(Popup.Title, Popup.Text, Popup.Choices)
     end
 
     local function ShowMsg()
         if self.Value >= self.Target then  --complete
             Notification.Title = Notification.Title .. " Completed!"
-            Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target).. "\nCongratulations on your achievement! :)"
+            Notification.Message = FF.Funcs.FormatNumber(self.Value) .. " / " .. FF.Funcs.FormatNumber(self.Target).. "\nCongratulations on your achievement! :)"
         elseif self.Failed then --fail
             Notification.Title = Notification.Title .. " Failed!"
-            Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target).. "\nBetter luck next time :)"
+            Notification.Message = FF.Funcs.FormatNumber(self.Value) .. " / " .. FF.Funcs.FormatNumber(self.Target).. "\nBetter luck next time :)"
         elseif self.Value < self.Target then --progress
             SleepTime.Sols = CurrentModOptions:GetProperty("SolDelay")
             SleepTime.Hours = CurrentModOptions:GetProperty("HourDelay")
             Notification.Title = Notification.Title .. " Progress"
-            Notification.Message = FFL_FormatNumber(self.Value) .. " / " .. FFL_FormatNumber(self.Target)
+            Notification.Message = FF.Funcs.FormatNumber(self.Value) .. " / " .. FF.Funcs.FormatNumber(self.Target)
         end
 
         AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, ShowPopup, Notification.Options, Notification.Map)

@@ -1,8 +1,8 @@
 return PlaceObj('ModDef', {
 	'title', "Achievement Tracker",
-	'description', "This mod is still a work in progress. Please hop in discord if you wish to help test or provide feedback. :)   https://discord.gg/kTgYq9UjWx",
-	'image', "thumbnail.png",
-	'last_changes', "https://github.com/FizzleFuze/Achievement_Tracker/blob/master/changelog.md",
+	'description', "This mod is still a work in progress. Please hop in discord to help test and provide feedback. :)   https://discord.gg/kTgYq9UjWx",
+	'image', "Images/thumbnail.png",
+	'last_changes', "https://github.com/Surviving-Mars_Mods/Achievement_Tracker",
 	'ignore_files', {
 		"*.git/*",
 		"*.svn/*",
@@ -17,7 +17,7 @@ return PlaceObj('ModDef', {
 			'id', "FIZZLE1",
 			'title', "Fizzle Fuze's Library",
 			'version_major', 1,
-			'version_minor', 4,
+			'version_minor', 5,
 		}),
 	},
 	'id', "FIZZLE9",

@@ -1,6 +1,6 @@
 -- See license.md for copyright info
 local function Log(...)
-    FFL_LogMessage(CurrentModDef.title, "CCC", ...)
+    FF.Funcs.LogMessage(CurrentModDef.title, "CCC", ...)
 end
 
 function UpdateCCC()
