@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Achievement_Tracker.iml" filepath="$PROJECT_DIR$/Achievement_Tracker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Achievement-Tracker.iml" filepath="$PROJECT_DIR$/Achievement-Tracker.iml" />
     </modules>
   </component>
 </project>

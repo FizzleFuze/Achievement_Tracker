@@ -5,11 +5,12 @@
 
 2do:
     [F,F,F] Only create the window once. Open and close it afterwards.
-    [F,F,F] add options for colour etc... check ChoGGi's real time clock mod for inspiration
+    [F,F,F] Add option for display type (message vs onscreen)
+    [F,F,F] "Aren't They Cute" is missing from PA. Should check others too then.
+    [F,F,F] add options for fonts... check ChoGGi's real time clock mod for inspiration
     [F,F,F] add move-ability like console window, or at least options
-    [F,F,F] Do you have B&B? I think it doesn't show up underground - it flashes off-screen. Haven't gone to asteroids yet with mod
     [F,F,F] command center view of progress for all eligible achievements on this play-through
-
+    [F,F,F] Do you have B&B? I think it doesn't show up underground - it flashes off-screen. Haven't gone to asteroids yet with mod
     [F,F,F] beautification of PA OSD
         [F,F,F] update PA OSD to a better one (see draft)
         [F,F,F] update screenshot of PA OSD
