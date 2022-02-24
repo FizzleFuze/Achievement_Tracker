@@ -72,6 +72,7 @@ local function Init()
             AchievementObjects.Willtheyhold.Target = 100
             AchievementObjects.ScannedAllSectors.Target = 100
             AchievementObjects.DeepScannedAllSectors.Target = 100
+            AchievementObjects.MaxedAllTPs.Target = 400
             AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion -- = 0... data must not be initialized yet, updated later
 
             --boo for using the wrong scale
@@ -308,6 +309,12 @@ function OnMsg.NewHour(_)
     if sponsor == "Roscosmos" and CalcChallengeRating() + 100 >= 500 and #(UIColony:GetCityLabels("Colonist") or empty_table) <= AchievementPresets.RussiaHadManyColonists.target then
         AchievementObjects.RussiaHadManyColonists:UpdateValue(#(UIColony:GetCityLabels("Colonist") or empty_table))
     end
+    --SpaceYBuiltDrones (this is hardcoded in to Drone.lua and hasn't been updated for B&B)
+    if MainCity.labels.Drone then
+        if GetMissionSponsor().id == "SpaceY" and UIColony.day < 100 and #MainCity.labels.Drone <= AchievementPresets.SpaceYBuiltDrones.target then
+            AchievementObjects.SpaceYBuiltDrones:UpdateValue(#MainCity.labels.Drone or empty_table)
+        end
+    end
 end
 
 function OnMsg.WasteRockConversion(amount, producers)
@@ -329,42 +336,24 @@ function OnMsg.WasteRockConversion(amount, producers)
     end
 end
 
-local AllTerraformParamsMaxed = function()
-    local params = {
-        "Atmosphere",
-        "Temperature",
-        "Water",
-        "Vegetation"
-    }
-    for _, param in ipairs(params) do
-        if GetTerraformParamPct(param) < 100 then
-            return false
-        end
-    end
-    return true
-end
---2do: update/fix this
 function OnMsg.TerraformParamChanged()
     if not InitDone then
         return
     end
 
-    if not AllTerraformParamsMaxed() then
-        local Notification = {
-            id = "MaxedAllTPs",
-            Title = "Creator of Worlds Progress",
-            Message = "Atmosphere: " .. GetTerraformParamPct("Atmosphere") .. " / 100 " .. "Temperature: " .. GetTerraformParamPct("Temperature") .. " / 100 " .. "Water: " ..
-                    GetTerraformParamPct("Water") .. " / 100 " .."Vegetation: " .. GetTerraformParamPct("Vegetation") .. " / 100 ",
-            Icon = "UI/Achievements/" .. Achievement.Image .. ".dds",
-            Callback = nil,
-            Options = {
-                expiration = 10000,
-                game_time = true
-            },
-            Map = MainCity.map_id
-        }
-        AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, nil, Notification.Options, Notification.Map)
+    local TerraformTotal = 0
+    local TerraformingParameters = {
+        "Atmosphere",
+        "Temperature",
+        "Water",
+        "Vegetation"
+    }
+
+    for _, TerraformingParameter in ipairs(TerraformingParameters) do
+        TerraformTotal = TerraformTotal + GetTerraformParamPct(TerraformingParameter)
     end
+
+    AchievementObjects.MaxedAllTPs:UpdateValue(TerraformTotal)
 end
 
 local CheckTraitsAchievements = function()

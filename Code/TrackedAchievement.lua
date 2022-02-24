@@ -97,6 +97,7 @@ function TrackedAchievement:ShowMessage()
 end
 
 function TrackedAchievement:UpdateValue(NewValue)
+
     if self.Type == "Resource" then
         NewValue = NewValue / 1000
     end

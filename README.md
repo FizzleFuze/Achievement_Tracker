@@ -1,6 +1,6 @@
 ## Achievement Tracker
-✔ Track achievement progress on screen <br> 
-✔ Track primary achievement in dedicated window
+ - Track achievement progress on screen 
+ - Track primary achievement in dedicated window
 
 ### Description:
 Track all the achievements!
@@ -50,10 +50,9 @@ Details on the latest changes as well as changes in future versions are found in
 
 ### Contact Me:
 I appreciate feedback on my mods and ideas for new ones!
-
-    ✔ Discord:https://discord.gg/kTgYq9UjWx
-    ✔ Reddit: /u/Fizzle_Fuze (/r/SurvivingMars)
-    ✔ Email: mods@fizzlefuze.com
+ - Discord:https://discord.gg/kTgYq9UjWx
+ - Reddit: /u/Fizzle_Fuze (/r/SurvivingMars)
+ - Email: mods@fizzlefuze.com
 
 See [*Info/ContactMe.txt*](Info/ContactMe.txt) for more info on contacting me.
 

@@ -62,6 +62,7 @@ PlaceObj('ModItemOptionChoice', {
 		"Assisted Self-Improvement",
 		"Marsopolis",
 		"Do Androids Dream of Electric Sheep?",
+		"Aren't they Cute?",
 	},
 }),
 PlaceObj('ModItemOptionNumber', {

@@ -1,4 +1,8 @@
-## Version 1.8
+## Version 1.9
+ - Added achievement SpaceYBuiltDrones (Aren't they Cute?)
+ - Fix for terraforming achievement error spam
+
+### Version 1.8
  - Updated for new library version
  - Made PA window even prettier
  - Added special thanks to ChoGGi, LoneSamurai, and Ella
