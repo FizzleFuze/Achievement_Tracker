@@ -109,10 +109,6 @@ function TrackedAchievement:UpdateValue(NewValue)
         NewValue = NewValue / 1000
     end
 
-    if GetAchievementFlags(self.id) then
-        self.Value = self.Target
-    end
-
     if NewValue ~= self.Value then
         self.Value = NewValue
         self:ShowMessage()

@@ -1,6 +1,5 @@
 2do:
     add move-ability like console window, or at least options
-    update screenshot of PA OSD
 
 
 for k,v in pairs(X) do print(k, " = ", v) end

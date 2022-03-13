@@ -121,8 +121,15 @@ function UpdateOSD()
     for _, Achievement in pairs(FF.AT.Achievements) do
         if Achievement.Tracked then
             TrackedCount = TrackedCount + 1
-            local Progress = FF.Funcs.FormatNumber(Achievement.Value) .. " / " .. FF.Funcs.FormatNumber(Achievement.Target)
+            local Progress
             local Text
+
+            if GetAchievementFlags(Achievement.id) then
+                Progress = "COMPLETE"
+            else
+                Progress = FF.Funcs.FormatNumber(Achievement.Value) .. " / " .. FF.Funcs.FormatNumber(Achievement.Target)
+            end
+            
             if OSD["FF_AT_OSD_" .. Achievement.id] then
                 Text = OSD["FF_AT_OSD_" .. Achievement.id]
                 Text:Open()
