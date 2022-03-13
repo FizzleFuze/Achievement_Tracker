@@ -4,8 +4,7 @@ local function Log(...)
     FF.Funcs.LogMessage(CurrentModDef.title, "TrackedAchievement", ...)
 end
 
-DefineClass.TrackedAchievement = {
-    __parents = { "Object", },
+TrackedAchievement = {
     id = "Uninitialized",
     Name = "Uninitialized",
     Description = "Uninitialized",
@@ -16,18 +15,27 @@ DefineClass.TrackedAchievement = {
     Target = 0,
     Value = 0,
     Type = "default",
+    Tracked = false
 }
 
-function TrackedAchievement:Init()
-    if self.default_label then
-        MainCity:AddToLabel(self.default_label, self)
+function TrackedAchievement:Init(id)
+    if not id then
+        Log("ERROR", "Cannot track achievement without id")
+        return
     end
+
+    local NewTrackedAchievement = {}
+    setmetatable(NewTrackedAchievement, self)
+    self.__index = self
+
+    NewTrackedAchievement.id = id
+    FF.AT.Achievements[id] = NewTrackedAchievement
+    return NewTrackedAchievement
 end
 
 function TrackedAchievement:Done()
-    if self.default_label then
-        MainCity:RemoveFromLabel(self.default_label, self)
-    end
+    local index = table.find(FF.AT.Achievements, 'id', self.id)
+    table.remove(FF.AT.Achievements, index)
 end
 
 --delayed show message
@@ -49,12 +57,11 @@ function TrackedAchievement:ShowMessage()
         Icon = "UI/Achievements/" .. self.Image .. ".dds",
         Callback = nil,
         Options = {
-
             expiration = CurrentModOptions:GetProperty("MessageLength") * 1000 * Speed, -- real time changes with game speed >.>
             game_time = false,
             rollover_text = FF.Funcs.Translate(self.description),
         },
-        Map = MainCity.map_id
+        -- Map = MainCity.map_id  _G['ActiveMapID']
     }
 
     local function ShowPopup()
@@ -81,7 +88,7 @@ function TrackedAchievement:ShowMessage()
             Notification.Message = FF.Funcs.FormatNumber(self.Value) .. " / " .. FF.Funcs.FormatNumber(self.Target)
         end
 
-        AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, ShowPopup, Notification.Options, Notification.Map)
+        AddCustomOnScreenNotification(Notification.id, Notification.Title, Notification.Message, Notification.Icon, ShowPopup, Notification.Options, ActiveMapID)
         Sleep(SleepTime.Sols * const.Scale.sols)
         Sleep(SleepTime.Hours * const.Scale.hours)
         self.MessageThread = nil
@@ -102,14 +109,20 @@ function TrackedAchievement:UpdateValue(NewValue)
         NewValue = NewValue / 1000
     end
 
-    if CurrentModOptions:GetProperty("ShowOnScreen") == self.Name then
-        UpdateOSD()
+    if GetAchievementFlags(self.id) then
+        self.Value = self.Target
     end
 
     if NewValue ~= self.Value then
         self.Value = NewValue
         self:ShowMessage()
     end
+
+    local DisplayMode = CurrentModOptions:GetProperty("DisplayMode")
+    if DisplayMode == "OSD" or DisplayMode == "Both" then
+        UpdateOSD()
+    end
+
 end
 
 function TrackedAchievement:SetFailed()

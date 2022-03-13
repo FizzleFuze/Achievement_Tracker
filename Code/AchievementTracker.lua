@@ -5,94 +5,121 @@ local function Log(...)
     FF.Funcs.LogMessage(CurrentModDef.title, "AchievementTracker", ...)
 end
 
---shared
-SharedModEnv["FF_AT_ShowMainAchievementWindow"] = true
+--globals
+if not rawget(_G['FF'], 'AT') then
+    FF.AT = { Achievements = {} }
+end
 
 --locals
 local AchievementObjects = {}
-local InitDone = false
 
--- hook opening dialogs
-local FF_OpenDialog = OpenDialog
-function OpenDialog(DialogPath, ...)
-    Log("Opening dialog ", DialogPath)
-    local Dialog = FF_OpenDialog(DialogPath, ...)
-    if DialogPath == "InGameInterface" then
+-- mod options
+local function ModOptions()
+    local DisplayMode = CurrentModOptions:GetProperty("DisplayMode")
+    if (DisplayMode == "OSD" or DisplayMode == "Both") then
         CreateOSD()
-  --  elseif DialogPath == "ColonyControlCenter" then
---        CreateCCC()
+
+        local ToggleTrackedAchievement = CurrentModOptions:GetProperty("TrackedAchievement")
+        for _, Achievement in pairs(FF.AT.Achievements) do
+            if Achievement.Name == ToggleTrackedAchievement then
+                Achievement.Tracked = not Achievement.Tracked
+            end
+        end
+
+        UpdateOSD()
+        Mods.FIZZLE3.options.TrackedAchievement = "None" -- so that re-applying mod options doesn't toggle the last achievement automagically
     end
-    return Dialog
 end
 
 --initialize achievement objects
 local function Init()
-    InitDone = false
-    SharedModEnv["FF_AT_ShowOnScreen"] = CurrentModOptions:GetProperty("ShowOnScreen")
+    Log("Init AT")
 
     if not MainCity then
-        Log("No city!")
+        Log("ERROR", "No city!")
         return
     end
 
-    if not AchievementPresets then
+    if not Presets.Achievement then
         Log("ERROR", "No Achievements!")
         return
     end
 
-    if MainCity.labels.TrackedAchievements then
-        MainCity.labels.TrackedAchievements = nil
-    end
-
-    for _,Achievement in pairs(AchievementPresets) do
-
-        if Achievement.save_in then
-            if (Achievement.save_in == "picard" and g_AvailableDlc.picard) or
-                    (Achievement.save_in == "armstrong" and g_AvailableDlc.armstrong) or
-                    (Achievement.save_in == "gagarin" and g_AvailableDlc.gagarin) then
-            end
+    local function InitAchievementObjects(Achievements)
+        for _,Achievement in pairs(Achievements) do
+            local AchievementObj = TrackedAchievement:Init(_InternalTranslate(Achievement.id))
+            AchievementObj.Name = _InternalTranslate(Achievement.display_name)
+            AchievementObj.Description = _InternalTranslate(Achievement.how_to)
+            AchievementObj.Image = Achievement.image
+            AchievementObj.Target = Achievement.target
+            AchievementObj.Value = 0
         end
-
-        local AchievementObj = PlaceObj("TrackedAchievement")
-        AchievementObj.id = _InternalTranslate(Achievement.id)
-        AchievementObj.Name = _InternalTranslate(Achievement.display_name)
-        AchievementObj.Description = _InternalTranslate(Achievement.how_to)
-        AchievementObj.Image = Achievement.image
-        AchievementObj.Target = Achievement.target
-
-        AchievementObjects[AchievementObj.id] = AchievementObj
-
-        CreateGameTimeThread(function()
-            Sleep(1000) -- wait for PlaceObj to finish
-            --boo for hardcoding
-            AchievementObjects.AsteroidHopping.Target = 10
-            AchievementObjects.USAResearchedEngineering.Target = #Presets.TechPreset.Engineering
-            AchievementObjects.Multitasking.Target = 3
-            AchievementObjects.SpaceDwarves.Target = 200
-            AchievementObjects.Willtheyhold.Target = 100
-            AchievementObjects.ScannedAllSectors.Target = 100
-            AchievementObjects.DeepScannedAllSectors.Target = 100
-            AchievementObjects.MaxedAllTPs.Target = 400
-            AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion -- = 0... data must not be initialized yet, updated later
-
-            --boo for using the wrong scale
-            AchievementObjects.IndiaConvertedWasteRock.Type = "Resource"
-            AchievementObjects.BrazilConvertedWasteRock.Type = "Resource"
-            AchievementObjects.RussiaExtractedAlot.Type = "Resource"
-            AchievementObjects.BlueSunProducedFunding.Type = "Resource"
-            AchievementObjects.BlueSunExportedAlot.Type = "Resource"
-        end)
     end
-    InitDone = true
-end
 
+    InitAchievementObjects(Presets.Achievement['Default'])
+    if g_AvailableDlc.picard then
+        InitAchievementObjects(Presets.Achievement['Below and Beyond'])
+    end
+    if g_AvailableDlc.armstrong then
+        InitAchievementObjects(Presets.Achievement['Green Planet'])
+    end
+    if g_AvailableDlc.gagarin then
+        InitAchievementObjects(Presets.Achievement['Space Race'])
+    end
+    AchievementObjects = FF.AT.Achievements
+
+    --boo for hardcoding
+    if AchievementObjects.AsteroidHopping then
+        AchievementObjects.AsteroidHopping.Target = 10
+    end
+    if AchievementObjects.USAResearchedEngineering then
+        AchievementObjects.USAResearchedEngineering.Target = #Presets.TechPreset.Engineering
+    end
+    if AchievementObjects.Multitasking then
+        AchievementObjects.Multitasking.Target = 3
+    end
+    if AchievementObjects.SpaceDwarves then
+        AchievementObjects.SpaceDwarves.Target = 200
+    end
+    if AchievementObjects.Willtheyhold then
+        AchievementObjects.Willtheyhold.Target = 100
+    end
+    if AchievementObjects.ScannedAllSectors then
+        AchievementObjects.ScannedAllSectors.Target = 100
+    end
+    if AchievementObjects.DeepScannedAllSectors then
+        AchievementObjects.DeepScannedAllSectors.Target = 100
+    end
+    if AchievementObjects.MaxedAllTPs then
+        AchievementObjects.MaxedAllTPs.Target = 400
+    end
+    if AchievementObjects.SpaceExplorer then
+        AchievementObjects.SpaceExplorer.Target = #Presets.TechPreset.ReconAndExpansion -- = 0... data must not be initialized yet, updated later
+    end
+
+    --boo for using the wrong scale
+    if AchievementObjects.IndiaConvertedWasteRock then
+        AchievementObjects.IndiaConvertedWasteRock.Type = "Resource"
+    end
+    if AchievementObjects.BrazilConvertedWasteRock then
+        AchievementObjects.BrazilConvertedWasteRock.Type = "Resource"
+    end
+    if AchievementObjects.RussiaExtractedAlot then
+        AchievementObjects.RussiaExtractedAlot.Type = "Resource"
+    end
+    if AchievementObjects.BlueSunProducedFunding then
+        AchievementObjects.BlueSunProducedFunding.Type = "Resource"
+    end
+    if AchievementObjects.BlueSunExportedAlot then
+        AchievementObjects.BlueSunExportedAlot.Type = "Resource"
+    end
+
+    CreateOSD()
+    UpdateOSD()
+end
 
 --achievement triggers below
 function OnMsg.MarkPreciousMetalsExport(city, _)
-
-    if not InitDone then
-        return
-    end
 
     --BlueSunExportedAlot
     if GetMissionSponsor().id == "BlueSun" and UIColony.day < 100 then
@@ -101,10 +128,6 @@ function OnMsg.MarkPreciousMetalsExport(city, _)
 end
 
 function OnMsg.RocketLanded(rocket)
-
-    if not InitDone then
-        return
-    end
 
     --AsteroidHopping
     if rocket:IsKindOf("LanderRocketBase") then
@@ -120,7 +143,7 @@ function OnMsg.RocketLanded(rocket)
 end
 
 function OnMsg.TechResearched(_, research, first_time)
-    if not first_time or not InitDone then
+    if not first_time then
         return
     end
     --SpaceExplorer
@@ -149,9 +172,6 @@ end
 
 function OnMsg.AsteroidRocketLanded(rocket)
 
-    if not InitDone then
-        return
-    end
 
     --Multitasking
     if not rocket:IsKindOf("LanderRocketBase") then
@@ -177,9 +197,7 @@ function OnMsg.AsteroidRocketLanded(rocket)
 end
 
 function OnMsg.NewDay(Day)
-    if not InitDone then
-        return
-    end
+
 
     if Day == 100 then
         if GetMissionSponsor().id == "BlueSun" then
@@ -221,9 +239,6 @@ function OnMsg.NewDay(Day)
 end
 
 function OnMsg.PreventedCaveIn(_)
-    if not InitDone then
-        return
-    end
 
     --Willtheyhold
     if PreventedCaveIns < 100 then
@@ -232,9 +247,6 @@ function OnMsg.PreventedCaveIn(_)
 end
 
 function OnMsg.BuildingInit(bld)
-    if not InitDone then
-        return
-    end
 
     --ChinaTaiChiGardens
     if UIColony.day <= 100 then
@@ -253,9 +265,6 @@ function OnMsg.BuildingInit(bld)
 end
 
 function OnMsg.TrainingComplete(building, _)
-    if not InitDone then
-        return
-    end
 
     --JapanTrainedSpecialists
     if UIColony.day <= 100 and building.training_type == "specialization" and GetMissionSponsor().id == "Japan" then
@@ -266,9 +275,6 @@ function OnMsg.TrainingComplete(building, _)
 end
 
 function OnMsg.FundingChanged(colony, amount)
-    if not InitDone then
-        return
-    end
 
     --BlueSunProducedFunding
     if GameTime() > 1 and GetMissionSponsor().id == "BlueSun" and UIColony.day <= 100 and 0 < amount then
@@ -283,9 +289,6 @@ function OnMsg.FundingChanged(colony, amount)
 end
 
 function OnMsg.NewHour(_)
-    if not InitDone then
-        return
-    end
 
     --EuropeResearchedAlot
     local sponsor = GetMissionSponsor().id
@@ -318,9 +321,6 @@ function OnMsg.NewHour(_)
 end
 
 function OnMsg.WasteRockConversion(amount, producers)
-    if not InitDone then
-        return
-    end
 
     local sponsor = GetMissionSponsor().id
     WasteRockConverted = WasteRockConverted + amount
@@ -337,9 +337,6 @@ function OnMsg.WasteRockConversion(amount, producers)
 end
 
 function OnMsg.TerraformParamChanged()
-    if not InitDone then
-        return
-    end
 
     local TerraformTotal = 0
     local TerraformingParameters = {
@@ -357,9 +354,6 @@ function OnMsg.TerraformParamChanged()
 end
 
 local CheckTraitsAchievements = function()
-    if not InitDone then
-        return
-    end
 
     if GetAchievementFlags("ColonistWithRareTraits") and GetAchievementFlags("HadColonistWith5Perks") and GetAchievementFlags("HadVegans") then
         return
@@ -403,9 +397,6 @@ function OnMsg.ColonistAddTrait()
 end
 
 function OnMsg.SectorScanned()
-    if not InitDone then
-        return
-    end
 
     if GetAchievementFlags("ScannedAllSectors") and GetAchievementFlags("DeepScannedAllSectors") then
         return
@@ -450,9 +441,6 @@ local CountNonConstructionSitesInLabel = function(city, label)
     return count
 end
 function OnMsg.ConstructionComplete(bld)
-    if not InitDone then
-        return
-    end
 
     if IsKindOf(bld, "RocketLandingSite") then
         return
@@ -476,9 +464,6 @@ function OnMsg.ConstructionComplete(bld)
 end
 
 function OnMsg.ResourceExtracted()
-    if not InitDone then
-        return
-    end
 
     --RussiaExtractedAl1ot
     if GetMissionSponsor().id == "Roscosmos" and UIColony.day < 100 and g_TotalExtractedResources <= RussiaExtractedAlot_target then
@@ -502,9 +487,6 @@ local CheckColonistCountAchievements = function()
     end
 end
 function OnMsg.ColonistBorn(colonist)
-    if not InitDone then
-        return
-    end
 
     --NewArcChurchMartianborns
     if colonist.traits.Child and colonist.age == 0 then
@@ -519,9 +501,6 @@ function OnMsg.ColonistArrived()
 end
 
 function OnMsg.ColonistCured(_, bld)
-    if not InitDone then
-        return
-    end
 
     --CuredColonists
     if bld.total_cured <= AchievementPresets.CuredColonists.target then
@@ -530,9 +509,6 @@ function OnMsg.ColonistCured(_, bld)
 end
 
 function OnMsg.ColonistJoinsDome(_, dome)
-    if not InitDone then
-        return
-    end
 
     --Had100ColonistsInDome
     if #(dome.labels.Colonist or empty_table) <= AchievementPresets.Had100ColonistsInDome.target then
@@ -545,15 +521,12 @@ function OnMsg.ColonistJoinsDome(_, dome)
 end
 
 --event handling
-function OnMsg.ModsReloaded()
-    if MainCity then
-        MainCity.labels.TrackedAchievement = nil
+OnMsg.ApplyModOptions = ModOptions
+
+--do init stuff
+function OnMsg.GameStateChanged(Changed)
+    if Changed.loading == false then
         Init()
+        ModOptions()
     end
 end
-function OnMsg.ApplyModOptions()
-    SharedModEnv["FF_AT_ShowMainAchievementWindow"] = CurrentModOptions:GetProperty("ShowMainAchievementWindow")
-    CreateOSD()
-end
-OnMsg.CityStart = Init
-OnMsg.LoadGame = Init

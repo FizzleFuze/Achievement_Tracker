@@ -3,14 +3,16 @@
  - Track primary achievement in dedicated window
 
 ### Description:
-Track all the achievements!
+Tracks achievements as you make progress towards them. To toggle tracking of achievement on/off, select it in the list of 'TrackedAchievements' in the mod options and apply.
 
 ### Options:
     Show Failure Messages
         On / Off
     
-    Show Primary Achievement Window
-        On / Off
+    Display Mode: Select how to display updates on achievements in progress
+        Messages
+        OSD (On Screen Display)
+        Both
 
     Primary Achievement: Select which achievement shows in Primary Achievement Window
         [All The Achievements]

@@ -1,4 +1,11 @@
-## Version 1.9
+## Version 1.10
+ - Added support for displaying multiple achievements in the OSD
+ - Changed option for show display to display mode
+ - Updates to OSD window handling
+ - Changed object code
+ - Improved loading
+
+### Version 1.9
  - Added achievement SpaceYBuiltDrones (Aren't they Cute?)
  - Fix for terraforming achievement error spam
 

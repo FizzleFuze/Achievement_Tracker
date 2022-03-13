@@ -1,24 +1,7 @@
 2do:
-    -> Do one step at a time <-
-    [Plan, Create, Test] Task 1 1
-        [Plan, Create, Test] Sub-Task 1
-
-2do:
-    [F,F,F] Add option to turn off messages as well as OSD
-    [F,F,F] Only create the window once. Open and close it afterwards.
-    [F,F,F] Add option for display type (message vs onscreen)
-    [F,F,F] add move-ability like console window, or at least options
-    [F,F,F] command center view of progress for all eligible achievements on this play-through
-    [F,F,F] Do you have B&B? I think it doesn't show up underground - it flashes off-screen. Haven't gone to asteroids yet with mod
-    [F,F,F] beautification of PA OSD
-        [F,F,F] update PA OSD to a better one (see draft)
-        [F,F,F] update screenshot of PA OSD
-
-2do:
-    Comments:
-        Oh right - reminds me...your Achievement mod cannot be disabled in mid-play without that error message and even with clicking OK, the save won't load.
-         - Due to it having classes I believe.
+    add move-ability like console window, or at least options
+    update screenshot of PA OSD
 
 
 for k,v in pairs(X) do print(k, " = ", v) end
-table.find
+for _, A in pairs(FF.AT.Achievements) do end

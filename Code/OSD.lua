@@ -3,19 +3,23 @@ local function Log(...)
     FF.Funcs.LogMessage(CurrentModDef.title, "OSD", ...)
 end
 
---locals
-local UpdateThread
+local AchievementOSD
 
-function CreateOSD()
-    local ShowMAWindow = SharedModEnv["FF_AT_ShowMainAchievementWindow"]
-
+--open panel for selectable achievements
+--2do: add scrollbar
+--[[
+local function ShowSelectAchievement()
     local function OnClick(...)
         --2do: change achieve
     end
 
     local function OnDoubleClick(...)
-        ShowMAWindow = false
-        Dialogs.InGameInterface.FF_AT_PrimaryAchievement:Close()
+        Dialogs.InGameInterface.FF_AT_SelectAchievement:Close()
+    end
+
+    if Dialogs.InGameInterface.FF_AT_SelectAchievement then
+        Dialogs.InGameInterface.FF_AT_SelectAchievement:Open()
+        return
     end
 
     local Parent = Dialogs.InGameInterface
@@ -24,112 +28,116 @@ function CreateOSD()
         return
     end
 
-    if Parent.FFAT_PrimaryAchievement then --backwards compatibility
-        Parent.FFAT_PrimaryAchievement:DeleteChildren()
-        Parent.FFAT_PrimaryAchievement:delete()
+    local Window = FF.X.Create("Window", "FF_AT_SelectAchievement", Parent)
+    Window.VAlign = "center"
+    Window.Margins = box(0, 0, 0, 0)
+    Window.OnMouseButtonDoubleClick = OnDoubleClick
+    Window.OnMouseButtonDown = OnClick
+    Window.RolloverText = FF.Funcs.Translate("<image UI/Infopanel/left_click.tga 1400>Add/Remove<newline><image UI/Infopanel/left_click.tga 1400>*2 Close")
+    Window.RolloverTitle = FF.Funcs.Translate("Select Achievement(s) to Track")
+
+    local Frame = FF.X.Create("Frame", "FF_AT_SA_Frame", Window)
+    Frame.FrameBox = box(0,20,0,0)
+    Frame.Image = "UI/CommonNew/ip.dds"
+
+    local Title = FF.X.Create("Text", "FF_AT_SA_Title", Frame, "FF_PrimaryAchievement_Title")
+    Title:SetText(FF.Funcs.Translate("Track Achievements:"))
+
+    for _, Achievement in pairs(FF.AT.Achievements) do
+        local AchievementText = FF.X.Create("Text", "FF_AT_SA_Achievement_" .. Achievement.id, Frame, "FF_PrimaryAchievement_Progress")
+        if Achievement.Tracked then
+            AchievementText:SetText(FF.Funcs.Translate("<image UI/Infopanel/arrow_remove.dds> "..Achievement.Name))
+        else
+            AchievementText:SetText(FF.Funcs.Translate("<image UI/Infopanel/arrow_add.dds> "..Achievement.Name))
+        end
+    end
+end
+--]]
+
+--make or open the OSD
+function CreateOSD()
+    Log("Creating OSD")
+
+    local function OnClick(...)
+        --ShowSelectAchievement()
     end
 
-    if Parent.FF_AT_PrimaryAchievement then
-        Parent.FF_AT_PrimaryAchievement:DeleteChildren()
-        Parent.FF_AT_PrimaryAchievement:delete()
+    local function OnDoubleClick(...)
+        Dialogs.InGameInterface.FF_AT_AchievementOSD:Close()
     end
 
-    if not ShowMAWindow then
+    if Dialogs.InGameInterface.FF_AT_AchievementOSD then
+        Dialogs.InGameInterface.FF_AT_AchievementOSD:Open()
+        AchievementOSD = Dialogs.InGameInterface.FF_AT_AchievementOSD
+        UpdateOSD()
         return
     end
 
-    local OSD = XWindow:new({
-        ChildrenHandleMouse = false,
-        Dock = "box",
-        FoldWhenHidden = true, --how to hide?
-        HAlign = "center",
-        HandleKeyboard = false,
-        HandleMouse = true,
-        Id = "FF_AT_PrimaryAchievement",
-        IdNode = true,
-        Margins = box(0, 85, 0, 0), --below InfoBar
-        OnMouseButtonDoubleClick = OnDoubleClick,
-        OnMouseButtonDown = OnClick,
-        Padding = box(2,2,2,2),
-        RolloverHint = FF.Funcs.Translate("Keep up the good work! =)"),
-        RolloverTemplate = "Rollover",
-        RolloverText = FF.Funcs.Translate("<image UI/Infopanel/left_click.tga 1400>*2 Close"),
-        RolloverTitle = FF.Funcs.Translate("Primary Achievement"),
-        transparency = 50,
-        VAlign = "top",
-    }, Parent)
+    local Parent = Dialogs.InGameInterface
+    if not Parent then
+        Log("ERROR", "No InGameInterface!")
+        return
+    end
 
-    local Frame = XFrame:new({
-        Dock = "box",
-        FrameBox = box(0,20,0,0),
-        HAlign = "stretch",
-        HandleKeyboard = false,
-        Id = "FF_AT_PA_Frame",
-        Image = "UI/CommonNew/ip.dds",
-        Padding = box(5,0,5,5),
-        VAlign = "stretch",
-    }, OSD)
+    local DisplayMode = CurrentModOptions:GetProperty("DisplayMode")
+    if DisplayMode ~= "OSD" and DisplayMode ~= "Both" then
+        return
+    end
 
-    XText:new({
-        Dock = "top",
-        HandleKeyboard = false,
-        Id = "FF_AT_PA_Title",
-        TextStyle = "FF_PrimaryAchievement_Title",
-        TextHAlign = "center",
-    }, Frame)
+    --Achievement Tracker OSD
+    local OSDWindow = FF.X.Create("Window", "FF_AT_AchievementOSD", Parent)
+    OSDWindow.ChildrenHandleMouse = false
+    OSDWindow.Margins = box(0, 85, 0, 0) --below InfoBar
+    OSDWindow.OnMouseButtonDoubleClick = OnDoubleClick
+    OSDWindow.OnMouseButtonDown = OnClick
+    OSDWindow.RolloverHint = FF.Funcs.Translate("Keep up the good work! =)")
+    --OSDWindow.RolloverText = FF.Funcs.Translate("<image UI/Infopanel/left_click.tga 1400>Select<newline><image UI/Infopanel/left_click.tga 1400>*2 Close")
+    OSDWindow.RolloverText = FF.Funcs.Translate("<image UI/Infopanel/left_click.tga 1400>*2 Close")
+    OSDWindow.RolloverTitle = FF.Funcs.Translate("Achievement Status")
+    OSDWindow.transparency = 50
+    AchievementOSD = OSDWindow
 
-    XText:new({
-        Dock = "top",
-        HandleKeyboard = "false",
-        Id = "FF_AT_PA_Description",
-        Margins = box(5,10,5,0),
-        TextStyle = "FF_PrimaryAchievement_Text",
-    }, Frame)
+    local OSDFrame = FF.X.Create("Frame", "FF_AT_PA_Frame", OSDWindow)
+    OSDFrame.FrameBox = box(0,32,0,0)
+    OSDFrame.Image = "UI/CommonNew/ip.dds"
 
-    XText:new({
-        Dock = "top",
-        HandleKeyboard = "false",
-        Id = "FF_AT_PA_Progress",
-        TextStyle = "FF_PrimaryAchievement_Progress",
-        TextHAlign = "center",
-        VAlign = "stretch",
-    }, Frame)
-
-    OSD:SetParent(Parent) --2do: test if this is necessary
-    UpdateOSD()
+    local OSDTitle = FF.X.Create("Text", "FF_PrimaryAchievement_Title", OSDFrame, "FF_PrimaryAchievement_Title")
+    OSDTitle.HAlign = "center"
+    OSDTitle.Margins = box(0,5,0,10)
+    OSDTitle:SetText(FF.Funcs.Translate("Achievement Progress"))
 end
 
+--update the OSD
 function UpdateOSD()
+    Log("UpdateOSD")
 
-    local function UpdateText()
-        local Title, Description, Progress
+    if not AchievementOSD then
+        Log("WARNING", "No OSD")
+        return
+    end
 
-        for _, A in pairs(MainCity.labels.TrackedAchievement) do
-            if A.Name == CurrentModOptions:GetProperty("ShowOnScreen") then
-
-                local OSD = Dialogs.InGameInterface.FF_AT_PrimaryAchievement.FF_AT_PA_Frame
-                if not OSD then
-                    Log("No OSD")
-                    return
-                end
-
-                Title = A.Name
-                Description = A.Description
-                Progress = "Current Progress: " .. FF.Funcs.FormatNumber(A.Value) .. " / " .. FF.Funcs.FormatNumber(A.Target)
-
-                if not OSD.FF_AT_PA_Title or not OSD.FF_AT_PA_Description or not OSD.FF_AT_PA_Progress then
-                    Log("ERROR", "Primary Achievement children don't exist!")
-                    return
-                end
-                OSD.FF_AT_PA_Title:SetText(FF.Funcs.Translate(Title))
-                OSD.FF_AT_PA_Description:SetText(FF.Funcs.Translate(Description))
-                OSD.FF_AT_PA_Progress:SetText(FF.Funcs.Translate(Progress))
-                UpdateThread = nil
+    local OSD = AchievementOSD.FF_AT_PA_Frame
+    local TrackedCount = 0
+    for _, Achievement in pairs(FF.AT.Achievements) do
+        if Achievement.Tracked then
+            TrackedCount = TrackedCount + 1
+            local Progress = FF.Funcs.FormatNumber(Achievement.Value) .. " / " .. FF.Funcs.FormatNumber(Achievement.Target)
+            local Text
+            if OSD["FF_AT_OSD_" .. Achievement.id] then
+                Text = OSD["FF_AT_OSD_" .. Achievement.id]
+                Text:Open()
+            else
+                Text = FF.X.Create("Text", "FF_AT_OSD_" .. Achievement.id, OSD, "FF_PrimaryAchievement_Progress")
+            end
+            Text:SetText(FF.Funcs.Translate(Achievement.Name .. ": ") .. Progress)
+        else
+            if OSD["FF_AT_OSD_" .. Achievement.id] then
+                OSD["FF_AT_OSD_" .. Achievement.id]:Close()
             end
         end
     end
 
-    if not UpdateThread then
-            UpdateThread = CreateGameTimeThread(UpdateText)
+    if TrackedCount == 0 then
+        AchievementOSD:Close()
     end
 end
