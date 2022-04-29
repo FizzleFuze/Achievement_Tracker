@@ -1,9 +1,21 @@
+![Thumbnail](Images/thumbnail.png)
 ## Achievement Tracker
  - Track achievement progress on screen 
  - Track primary achievement in dedicated window
 
+### On Screen Display (OSD):
+![On-Screen Display (OSD)](Images/osd.png)
+
+### Progress Message:
+![Progress Message](Images/ss1.png)
+
+
 ### Description:
 Tracks achievements as you make progress towards them. To toggle tracking of achievement on/off, select it in the list of 'TrackedAchievements' in the mod options and apply.
+
+- OSD can be moved by dragging around the title
+- OSD can be closed by double-clicking on it
+- Simply re-apply mod options (with display type set  correctly) to re-open it
 
 ### Options:
     Show Failure Messages
