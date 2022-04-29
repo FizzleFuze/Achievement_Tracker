@@ -1,4 +1,7 @@
-## Version 1.2
+## Version 1.3
+  - OSD can now be moved around the screen by dragging the title
+
+### Version 1.2
   - Tracked achievements on OSD are now retained across saves
   - Release
 

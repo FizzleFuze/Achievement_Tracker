@@ -11,9 +11,6 @@ function CreateOSD()
     Log("Naptime!")
     Sleep(500)
     Log("WAKEUP! PUT ON A LITTLE MAKEUP!")
-    local function OnClick(...)
-        --ShowSelectAchievement()
-    end
 
     local function OnDoubleClick(...)
         Dialogs.InGameInterface.FF_AT_AchievementOSD:Close()
@@ -43,17 +40,30 @@ function CreateOSD()
 
     --Achievement Tracker OSD
     local OSDWindow = FF.X.Create("Window", "FF_AT_AchievementOSD", Parent)
-    OSDWindow.ChildrenHandleMouse = false
     OSDWindow.Margins = box(0, 85, 0, 0) --below InfoBar
     OSDWindow.OnMouseButtonDoubleClick = OnDoubleClick
-    OSDWindow.OnMouseButtonDown = OnClick
     OSDWindow.RolloverHint = FF.Funcs.Translate("Keep up the good work! =)")
     OSDWindow.RolloverText = FF.Funcs.Translate("<image UI/Infopanel/left_click.tga 1400>*2 Close")
     OSDWindow.RolloverTitle = FF.Funcs.Translate("Achievement Status")
     OSDWindow.transparency = 50
     AchievementOSD = OSDWindow
 
-    local OSDFrame = FF.X.Create("Frame", "FF_AT_PA_Frame", OSDWindow)
+    local OSDMover = XMoveControl:new({
+        Dock = 'top',
+        HAlign = "stretch",
+        HandleKeyboard = 'false',
+        HandleMouse = 'true',
+        Id = "FF_AT_OSDMover",
+        IdNode = true,
+        MinHeight = 35,
+        Padding = box(2,2,2,2),
+        Transparency = 50,
+        VAlign = "stretch",
+        ZOrder = 2,
+        OnMouseButtonDoubleClick = OnDoubleClick
+    }, OSDWindow)
+
+    local OSDFrame = FF.X.Create("Frame", "FF_AT_PA_Frame", AchievementOSD)
     OSDFrame.FrameBox = box(0,32,0,0)
     OSDFrame.Image = "UI/CommonNew/ip.dds"
 
