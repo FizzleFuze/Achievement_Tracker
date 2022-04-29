@@ -7,5 +7,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Lua" jdkType="Lua SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Fizzle-Fuze-Library" level="application" />
+    <orderEntry type="library" name="Source" level="application" />
   </component>
 </module>

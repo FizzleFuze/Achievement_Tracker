@@ -1,13 +1,12 @@
 return PlaceObj('ModDef', {
 	'title', "Achievement Tracker",
-	'description', "This mod is still a work in progress. Please hop in discord to help test and provide feedback. :)   https://discord.gg/kTgYq9UjWx",
+	'description', "Track achievements progress on screen. Optional messages and on screen display. https://github.com/Surviving-Mars-Mods/Achievement-Tracker <3 FF",
 	'image', "Images/thumbnail.png",
 	'last_changes', "https://github.com/Surviving-Mars-Mods/Achievement-Tracker",
 	'ignore_files', {
 		"*.git/*",
 		"*.svn/*",
 		"src/*",
-		"Info/2do.txt",
 		"*.iml",
 		".idea/*",
 		"*.png",
@@ -26,8 +25,8 @@ return PlaceObj('ModDef', {
 	'pops_any_uuid', "3dab9f78-3c6f-4c5b-8ee7-9dfba90b9512",
 	'author', "Fizzle Fuze",
 	'version_major', 1,
-	'version_minor', 11,
-	'version', 69,
+	'version_minor', 2,
+	'version', 41235,
 	'lua_revision', 1009413,
 	'saved_with_revision', 1010838,
 	'code', {

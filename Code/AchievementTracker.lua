@@ -1,28 +1,41 @@
 -- See license.md for copyright info
-FF.Lib.Debug = false
+--FF.Lib.Debug = true
 
 local function Log(...)
     FF.Funcs.LogMessage(CurrentModDef.title, "AchievementTracker", ...)
 end
 
---globals
-if not rawget(_G['FF'], 'AT') then
-    FF.AT = { Achievements = {} }
-end
-
 -- mod options
 local function ModOptions()
+    Log("HERRRO PREASE!")
     local DisplayMode = CurrentModOptions:GetProperty("DisplayMode")
     if (DisplayMode == "OSD" or DisplayMode == "Both") then
-        CreateOSD()
-
         local ToggleTrackedAchievement = CurrentModOptions:GetProperty("TrackedAchievement")
+
         for _, Achievement in pairs(FF.AT.Achievements) do
+            Log("Toggled: ", ToggleTrackedAchievement)
             if Achievement.Name == ToggleTrackedAchievement then
                 Achievement.Tracked = not Achievement.Tracked
+
+                if Achievement.Tracked then
+                    Log("Adding tracked achievement: ")
+                    Log(Achievement.Name)
+                    UIColony.OSDList = UIColony.OSDList or {}
+                    table.insert_unique(UIColony.OSDList, Achievement.Name)
+                else
+                    Log("Removing tracked achievement: ")
+                    Log(Achievement.Name)
+                    for k,v in pairs(UIColony.OSDList) do
+                        if v == Achievement.Name then
+                            table.remove(UIColony.OSDList, k)
+                            return
+                        end
+                    end
+                end
             end
         end
 
+        CreateRealTimeThread(CreateOSD)
         UpdateOSD()
         Mods.FIZZLE3.options.TrackedAchievement = "None" -- so that re-applying mod options doesn't toggle the last achievement automagically
     end
@@ -43,6 +56,7 @@ local function Init()
     end
 
     local function InitAchievements(Achievements)
+        Log("BEGIN InitAchievements")
         for _,Achievement in pairs(Achievements) do
             local AchievementObj = TrackedAchievement:Init(_InternalTranslate(Achievement.id))
             AchievementObj.Name = _InternalTranslate(Achievement.display_name)
@@ -110,8 +124,11 @@ local function Init()
         FF.AT.Achievements.BlueSunExportedAlot.Type = "Resource"
     end
 
-    CreateOSD()
-    UpdateOSD()
+    local DisplayMode = CurrentModOptions:GetProperty("DisplayMode")
+    Log("DisplayMode = ", DisplayMode)
+    if (DisplayMode == "OSD" or DisplayMode == "Both") then
+        CreateRealTimeThread(CreateOSD)
+    end
 end
 
 --achievement triggers below
@@ -518,11 +535,5 @@ end
 
 --event handling
 OnMsg.ApplyModOptions = ModOptions
-
---do init stuff
-function OnMsg.GameStateChanged(Changed)
-    if Changed.loading == false then
-        Init()
-        ModOptions()
-    end
-end
+OnMsg.CityStart = Init
+OnMsg.LoadGame = Init

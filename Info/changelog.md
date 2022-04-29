@@ -1,8 +1,12 @@
-## Version 1.11
+## Version 1.2
+  - Tracked achievements on OSD are now retained across saves
+  - Release
+
+### Version 1.11
  - Changed display of achievements in OSD to "COMPLETE"
  - Bugfix
 
-## Version 1.10
+### Version 1.10
  - Added support for displaying multiple achievements in the OSD
  - Changed option for show display to display mode
  - Updates to OSD window handling

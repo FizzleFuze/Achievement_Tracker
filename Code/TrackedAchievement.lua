@@ -29,6 +29,12 @@ function TrackedAchievement:Init(id)
     self.__index = self
 
     NewTrackedAchievement.id = id
+    if not FF.AT then
+        FF.AT = {}
+    end
+    if not FF.AT.Achievements then
+        FF.AT.Achievements = {}
+    end
     FF.AT.Achievements[id] = NewTrackedAchievement
     return NewTrackedAchievement
 end
